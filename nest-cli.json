@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/devices/src",
+  "monorepo": true,
+  "root": "apps/devices",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/devices/tsconfig.app.json"
+  },
+  "projects": {
+    "devices": {
+      "type": "application",
+      "root": "apps/devices",
+      "entryFile": "main",
+      "sourceRoot": "apps/devices/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/devices/tsconfig.app.json"
+      }
+    },
+    "kepware": {
+      "type": "application",
+      "root": "apps/kepware",
+      "entryFile": "main",
+      "sourceRoot": "apps/kepware/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/kepware/tsconfig.app.json"
+      }
+    },
+    "communication": {
+      "type": "library",
+      "root": "libs/communication",
+      "entryFile": "index",
+      "sourceRoot": "libs/communication/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/communication/tsconfig.lib.json"
+      }
+    }
+  }
+}
