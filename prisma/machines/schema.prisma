@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/@prisma/db-machines"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MACHINES_DATABASE_URL")
+}
+
+enum Status {
+  IDLE
+  WORKING
+  MAINTENANCE
+  BROKEN
+}
+
+model Producent {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  types Type[]
+}
+
+model Type {
+  id          Int       @id @default(autoincrement())
+  name        String
+  producent   Producent @relation(fields: [producentId], references: [id])
+  producentId Int
+  Model       Model[]
+}
+
+model Model {
+  id      Int       @id @default(autoincrement())
+  name    String
+  type    Type      @relation(fields: [typeId], references: [id])
+  typeId  Int
+  Machine Machine[]
+}
+
+model Machine {
+  id             Int       @id @default(autoincrement())
+  serialNumber   String    @unique
+  producent      String
+  type           String
+  model          Model     @relation(fields: [modelId], references: [id])
+  modelId        Int
+  status         Status
+  startedAt      DateTime?
+  productionRate Int
+  version        Int
+}

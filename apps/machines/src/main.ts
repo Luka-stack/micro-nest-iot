@@ -1,11 +1,11 @@
-import { RmqService } from '@iot/communication';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import { RmqOptions } from '@nestjs/microservices';
-import { DevicesModule } from './devices.module';
+import { MachinesModule } from './machines.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(DevicesModule);
+  const app = await NestFactory.create(MachinesModule);
+  app.useGlobalPipes(new ValidationPipe());
 
   // const rmqService = app.get(RmqService);
   const configService = app.get(ConfigService);
@@ -15,5 +15,4 @@ async function bootstrap() {
   // await app.startAllMicroservices();
   await app.listen(configService.get('PORT'));
 }
-
 bootstrap();
