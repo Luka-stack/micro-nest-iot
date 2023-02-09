@@ -1,6 +1,13 @@
-import { PickType, PartialType } from '@nestjs/mapped-types';
-import { MachineDto } from './machine.dto';
+import { IsNumber, IsOptional } from 'class-validator';
+import { MachineStatus } from '../app.types';
+import { IsMachineStatus } from '../decorators/is-machine-status';
 
-export class UpdateMachineDto extends PartialType(
-  PickType(MachineDto, ['status', 'productionRate']),
-) {}
+export class UpdateMachineDto {
+  @IsOptional()
+  @IsMachineStatus()
+  status?: MachineStatus;
+
+  @IsOptional()
+  @IsNumber()
+  productionRate?: number;
+}

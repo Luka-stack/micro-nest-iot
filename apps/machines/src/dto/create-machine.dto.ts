@@ -1,9 +1,18 @@
-import { PickType } from '@nestjs/mapped-types';
-import { MachineDto } from './machine.dto';
+import { IsNumber, IsString } from 'class-validator';
 
-export class CreateMachineDto extends PickType(MachineDto, [
-  'serialNumber',
-  'producent',
-  'type',
-  'modelId',
-]) {}
+export class CreateMachineDto {
+  @IsString()
+  serialNumber: string;
+
+  @IsString()
+  producent: string;
+
+  @IsString()
+  type: string;
+
+  @IsNumber(
+    {},
+    { message: 'modelId must be a number that represents model identificator' },
+  )
+  modelId: number;
+}

@@ -67,7 +67,7 @@ describe('MachinesService', () => {
         });
       });
 
-      expect(() => machinesService.createMachine(machineDto)).rejects.toThrow(
+      expect(() => machinesService.create(machineDto)).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -80,7 +80,7 @@ describe('MachinesService', () => {
         });
       });
 
-      expect(() => machinesService.createMachine(machineDto)).rejects.toThrow(
+      expect(() => machinesService.create(machineDto)).rejects.toThrow(
         BadRequestException,
       );
     });
@@ -90,7 +90,7 @@ describe('MachinesService', () => {
         throw new Error('Unexpected');
       });
 
-      expect(() => machinesService.createMachine(machineDto)).rejects.toThrow(
+      expect(() => machinesService.create(machineDto)).rejects.toThrow(
         InternalServerErrorException,
       );
     });
@@ -98,7 +98,7 @@ describe('MachinesService', () => {
     it('creates new machine', async () => {
       prismaService.machine.create.mockImplementationOnce((data) => data.data);
 
-      const machine = await machinesService.createMachine(machineDto);
+      const machine = await machinesService.create(machineDto);
 
       expect(machine.serialNumber).toBe(machineDto.serialNumber);
       expect(machine.producent).toBe(machineDto.producent);
@@ -114,7 +114,7 @@ describe('MachinesService', () => {
 
       prismaService.machine.create.mockImplementationOnce((data) => data.data);
 
-      const machine = await machinesService.createMachine(machineDto);
+      const machine = await machinesService.create(machineDto);
 
       expect(machine.productionRate).toBe(defProductionRate);
       expect(machine.status).toBe(defStatus);
@@ -123,12 +123,10 @@ describe('MachinesService', () => {
   });
 
   describe('get one device', () => {
-    const findMachineDto = {
-      serialNumber: '123456',
-    };
+    const serialNumber = '123456';
 
     const machineMock = {
-      serialNumber: findMachineDto.serialNumber,
+      serialNumber,
       producent: 'Prod 1',
       status: 'IDLE',
     };
@@ -136,7 +134,7 @@ describe('MachinesService', () => {
     it('returns a machine', async () => {
       prismaService.machine.findUnique.mockReturnValueOnce(machineMock);
 
-      const machine = await machinesService.findOne(findMachineDto);
+      const machine = await machinesService.findOne(serialNumber);
 
       expect(machine.serialNumber).toBe(machineMock.serialNumber);
       expect(machine.producent).toBe(machineMock.producent);
@@ -144,7 +142,7 @@ describe('MachinesService', () => {
     });
 
     it('throw bad request if device not found', async () => {
-      expect(() => machinesService.findOne(findMachineDto)).rejects.toThrow(
+      expect(() => machinesService.findOne(serialNumber)).rejects.toThrow(
         BadRequestException,
       );
     });

@@ -3,11 +3,13 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
   Query,
 } from '@nestjs/common';
+import { MachineBo } from '../bos/machine.bo';
 import { CreateMachineDto } from '../dto/create-machine.dto';
 import { QueryMachineDto } from '../dto/query-machine.dto';
 import { UpdateMachineDto } from '../dto/update-machine.dto';
@@ -19,7 +21,12 @@ export class MachinesController {
 
   @Post()
   create(@Body() request: CreateMachineDto) {
-    return this.machinesService.createMachine(request);
+    return this.machinesService.create(request);
+  }
+
+  @Get('/:serialNumber')
+  findOne(@Param('serialNumber') serialNumber: string): Promise<MachineBo> {
+    return this.machinesService.findOne(serialNumber);
   }
 
   @Get()
@@ -31,13 +38,13 @@ export class MachinesController {
   update(
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
-  ) {
-    console.log(serialNumber, updateMachineDto);
+  ): Promise<MachineBo> {
     return this.machinesService.patch(serialNumber, updateMachineDto);
   }
 
   @Delete('/:serialNumber')
-  destroy(@Param('serialNumber') serialNumber: string) {
+  @HttpCode(204)
+  destroy(@Param('serialNumber') serialNumber: string): Promise<void> {
     return this.machinesService.destroy(serialNumber);
   }
 

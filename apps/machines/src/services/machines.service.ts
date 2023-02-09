@@ -6,10 +6,10 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common/exceptions/not-found.exception';
 
 import { PrismaService } from '../database/prisma.service';
-import { FindMachineDto } from '../dto/find-machine.dto';
 import { QueryMachineDto } from '../dto/query-machine.dto';
 import { UpdateMachineDto } from '../dto/update-machine.dto';
 import { CreateMachineDto } from '../dto/create-machine.dto';
+import { MachineBo } from '../bos/machine.bo';
 
 @Injectable()
 export class MachinesService {
@@ -18,7 +18,7 @@ export class MachinesService {
     @Inject('KEPWARE') private readonly billingClient: ClientProxy,
   ) {}
 
-  async createMachine(machineDto: CreateMachineDto): Promise<MachineModel> {
+  async create(machineDto: CreateMachineDto): Promise<MachineBo> {
     try {
       const data = {
         ...machineDto,
@@ -31,7 +31,7 @@ export class MachinesService {
         data,
       });
 
-      return machine;
+      return MachineBo.from(machine);
     } catch (err: unknown) {
       if (err.constructor.name === 'PrismaClientKnownRequestError') {
         if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
@@ -49,23 +49,22 @@ export class MachinesService {
     throw new InternalServerErrorException('Could not create machine');
   }
 
-  // TODO has to be route parameter
-  async findOne(machineDto: FindMachineDto): Promise<MachineModel> {
+  async findOne(serialNumber: string): Promise<MachineBo> {
     const machine = await this.prisma.machine.findUnique({
-      where: { serialNumber: machineDto.serialNumber },
+      where: { serialNumber: serialNumber },
     });
 
     if (!machine) {
       throw new BadRequestException('Machine not found');
     }
 
-    return machine;
+    return MachineBo.from(machine);
   }
 
-  async query(machineDto: QueryMachineDto): Promise<MachineModel[]> {
+  async query(machineDto: QueryMachineDto): Promise<MachineBo[]> {
     const query = this.queryBuilder(machineDto);
 
-    return this.prisma.machine.findMany({
+    const machines = await this.prisma.machine.findMany({
       where: {
         AND: [
           { producent: query.producent },
@@ -77,12 +76,14 @@ export class MachinesService {
         ],
       },
     });
+
+    return MachineBo.fromList(machines);
   }
 
   async patch(
     serialNumber: string,
     machineDto: UpdateMachineDto,
-  ): Promise<MachineModel> {
+  ): Promise<MachineBo> {
     const data: Partial<MachineModel> = {};
 
     if (machineDto.status) {
@@ -100,7 +101,7 @@ export class MachinesService {
         data: data,
       });
 
-      return machine;
+      return MachineBo.from(machine);
     } catch (err) {
       if (err.constructor.name === 'PrismaClientKnownRequestError') {
         if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
@@ -108,7 +109,6 @@ export class MachinesService {
         }
       }
     }
-
     throw new InternalServerErrorException('Could not create machine');
   }
 
