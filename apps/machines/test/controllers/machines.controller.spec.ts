@@ -15,9 +15,9 @@ import { MachineStatus } from '../../src/app.types';
 
 const mockMachinesService = () => ({
   findOne: jest.fn(),
-  create: jest.fn(),
-  patch: jest.fn(),
-  query: jest.fn(),
+  store: jest.fn(),
+  update: jest.fn(),
+  findMany: jest.fn(),
   destroy: jest.fn(),
 });
 
@@ -103,7 +103,7 @@ describe('Machines Controller', () => {
       machineTwo.id = 2;
       machineTwo.serialNumber = '9999';
 
-      machinesService.query.mockReturnValueOnce([machineOne, machineTwo]);
+      machinesService.findMany.mockReturnValueOnce([machineOne, machineTwo]);
 
       const { body } = await request(app.getHttpServer())
         .get(`/api/machines${query}`)
@@ -131,7 +131,7 @@ describe('Machines Controller', () => {
       createdMachine.id = 123;
       createdMachine.serialNumber = dto.serialNumber;
 
-      machinesService.create.mockReturnValueOnce(createdMachine);
+      machinesService.store.mockReturnValueOnce(createdMachine);
 
       const { body } = await request(app.getHttpServer())
         .post('/api/machines')
@@ -151,7 +151,7 @@ describe('Machines Controller', () => {
         modelId: 1,
       };
 
-      machinesService.create.mockImplementationOnce(() => {
+      machinesService.store.mockImplementationOnce(() => {
         throw new BadRequestException('Wrong modelId');
       });
 
@@ -185,7 +185,7 @@ describe('Machines Controller', () => {
       updated.id = 1;
       updated.status = dto.status as MachineStatus;
 
-      machinesService.patch.mockReturnValueOnce(updated);
+      machinesService.update.mockReturnValueOnce(updated);
 
       const { body } = await request(app.getHttpServer())
         .patch('/api/machines/123')
@@ -217,7 +217,7 @@ describe('Machines Controller', () => {
         status: 'IDLE',
       };
 
-      machinesService.patch.mockImplementationOnce(() => {
+      machinesService.update.mockImplementationOnce(() => {
         throw new NotFoundException('Machine not found');
       });
 

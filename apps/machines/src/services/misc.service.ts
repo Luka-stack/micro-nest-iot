@@ -1,23 +1,24 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../database/prisma.service';
-import { MachineLabels } from '../dto/machine-labels';
+import { MachineLabelsBo } from '../bos/machine-labels.bo';
+import { MiscRepository } from '../repositories/misc.repository';
 
 @Injectable()
 export class MiscService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly miscRepository: MiscRepository) {}
 
-  async findMachineLabels(): Promise<MachineLabels> {
+  async findMachinesLabels(): Promise<MachineLabelsBo> {
     const data = await Promise.all([
-      this.prisma.producent.findMany(),
-      this.prisma.type.findMany({ distinct: ['name'] }),
-      this.prisma.model.findMany(),
+      this.miscRepository.findProducents(),
+      this.miscRepository.findTypes(),
+      this.miscRepository.findModels(),
     ]);
 
-    return {
-      producents: data[0],
-      types: data[1],
-      models: data[2],
-    };
+    const machineLabels = new MachineLabelsBo();
+    machineLabels.machineProducents = data[0];
+    machineLabels.machineTypes = data[1];
+    machineLabels.machineModels = data[2];
+
+    return machineLabels;
   }
 }

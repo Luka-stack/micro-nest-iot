@@ -1,39 +1,33 @@
 import { Test } from '@nestjs/testing';
 
-import { PrismaService } from '../../src/database/prisma.service';
+import { MiscRepository } from '../../src/repositories/misc.repository';
 import { MiscService } from '../../src/services/misc.service';
 
-const prismaServiceMock = () => ({
-  producent: {
-    findMany: jest.fn(),
-  },
-  type: {
-    findMany: jest.fn(),
-  },
-  model: {
-    findMany: jest.fn(),
-  },
+const miscRepositoryMock = () => ({
+  findProducents: jest.fn(),
+  findTypes: jest.fn(),
+  findModels: jest.fn(),
 });
 
-type PrismaMock = ReturnType<typeof prismaServiceMock>;
+type MiscRepositoryMock = ReturnType<typeof miscRepositoryMock>;
 
 describe('MiscService', () => {
   let miscService: MiscService;
-  let prismaService: PrismaMock;
+  let miscRepository: MiscRepositoryMock;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
         MiscService,
         {
-          provide: PrismaService,
-          useFactory: prismaServiceMock,
+          provide: MiscRepository,
+          useFactory: miscRepositoryMock,
         },
       ],
     }).compile();
 
     miscService = module.get(MiscService);
-    prismaService = module.get(PrismaService);
+    miscRepository = module.get(MiscRepository);
   });
 
   it('MiscService defined', () => {
@@ -57,15 +51,15 @@ describe('MiscService', () => {
         { id: 2, name: 'Model #2' },
       ];
 
-      prismaService.producent.findMany.mockReturnValue(producentMock);
-      prismaService.type.findMany.mockReturnValue(typesMock);
-      prismaService.model.findMany.mockReturnValue(modelsMock);
+      miscRepository.findProducents.mockReturnValue(producentMock);
+      miscRepository.findTypes.mockReturnValue(typesMock);
+      miscRepository.findModels.mockReturnValue(modelsMock);
 
-      const labels = await miscService.findMachineLabels();
+      const labels = await miscService.findMachinesLabels();
 
-      expect(labels.producents).toStrictEqual(producentMock);
-      expect(labels.types).toStrictEqual(typesMock);
-      expect(labels.models).toStrictEqual(modelsMock);
+      expect(labels.machineProducents).toStrictEqual(producentMock);
+      expect(labels.machineTypes).toStrictEqual(typesMock);
+      expect(labels.machineModels).toStrictEqual(modelsMock);
     });
   });
 });

@@ -20,8 +20,8 @@ export class MachinesController {
   constructor(private readonly machinesService: MachinesService) {}
 
   @Post()
-  create(@Body() request: CreateMachineDto) {
-    return this.machinesService.create(request);
+  store(@Body() request: CreateMachineDto) {
+    return this.machinesService.store(request);
   }
 
   @Get('/:serialNumber')
@@ -30,8 +30,8 @@ export class MachinesController {
   }
 
   @Get()
-  query(@Query() queryMachineDto: QueryMachineDto) {
-    return this.machinesService.query(queryMachineDto);
+  findMany(@Query() queryMachineDto: QueryMachineDto) {
+    return this.machinesService.findMany(queryMachineDto);
   }
 
   @Patch('/:serialNumber')
@@ -39,7 +39,7 @@ export class MachinesController {
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
   ): Promise<MachineBo> {
-    return this.machinesService.patch(serialNumber, updateMachineDto);
+    return this.machinesService.update(serialNumber, updateMachineDto);
   }
 
   @Delete('/:serialNumber')
@@ -47,9 +47,4 @@ export class MachinesController {
   destroy(@Param('serialNumber') serialNumber: string): Promise<void> {
     return this.machinesService.destroy(serialNumber);
   }
-
-  // @Post()
-  // changeStatus(@Body() request: { name: string; on: boolean }) {
-  //   return this.devicesService.changeStatus(request);
-  // }
 }

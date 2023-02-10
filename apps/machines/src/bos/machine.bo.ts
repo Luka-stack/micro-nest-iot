@@ -31,6 +31,7 @@ export class MachineBo implements MachineModel {
     machineBo.type = machine.type;
     machineBo.modelId = machine.modelId;
     machineBo.status = machine.status;
+    machineBo.productionRate = machine.productionRate;
     machineBo.startedAt = machine.startedAt;
     machineBo.version = machine.version;
 
