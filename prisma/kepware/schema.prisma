@@ -1,0 +1,20 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../../node_modules/@prisma/db-kepware"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("KEPWARE_DATABASE_URL")
+}
+
+model Machine {
+    id             Int    @id @default(autoincrement())
+    serialNumber   String @unique
+    status         String
+    productionRate Int
+    version        Int
+}

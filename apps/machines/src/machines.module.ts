@@ -8,6 +8,8 @@ import { MachinesService } from './services/machines.service';
 import { MachinesController } from './controllers/machines.controller';
 import { MachinesRepository } from './repositories/machines.repository';
 import { MiscRepository } from './repositories/misc.repository';
+import { KEPWARE_QUEUE } from './constants/queues';
+import { KepwareService } from './services/kepware.service';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { MiscRepository } from './repositories/misc.repository';
       isGlobal: true,
       envFilePath: './apps/machines/.env',
     }),
-    CommunicationModule.register({ name: 'KEPWARE' }),
+    CommunicationModule.register({ name: KEPWARE_QUEUE }),
   ],
   controllers: [MachinesController],
   providers: [
@@ -24,6 +26,7 @@ import { MiscRepository } from './repositories/misc.repository';
     PrismaService,
     MachinesRepository,
     MiscRepository,
+    KepwareService,
   ],
 })
 export class MachinesModule {}

@@ -1,9 +1,12 @@
 import { CommunicationModule } from '@iot/communication';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule/dist';
 import * as Joi from 'joi';
 import { KepwareController } from './kepware.controller';
 import { KepwareService } from './kepware.service';
+import { KepwareRepository } from './repositories/kepware.repository';
+import { PrismaService } from './repositories/prisma.service';
 
 @Module({
   imports: [
@@ -16,8 +19,9 @@ import { KepwareService } from './kepware.service';
       envFilePath: './apps/kepware/.env',
     }),
     CommunicationModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [KepwareController],
-  providers: [KepwareService],
+  providers: [KepwareService, PrismaService, KepwareRepository],
 })
 export class KepwareModule {}

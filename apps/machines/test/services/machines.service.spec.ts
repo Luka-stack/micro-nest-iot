@@ -7,6 +7,7 @@ import { Test } from '@nestjs/testing';
 
 import { MachinesService } from '../../src/services/machines.service';
 import { MachinesRepository } from '../../src/repositories/machines.repository';
+import { KepwareService } from '../../src/services/kepware.service';
 
 const machinesRepositoryMock = () => ({
   create: jest.fn(),
@@ -16,13 +17,19 @@ const machinesRepositoryMock = () => ({
   delete: jest.fn(),
 });
 
-const clientProxy = () => ({});
+const kepwareServiceMock = () => ({
+  emitMachineCreated: jest.fn(),
+  emitMachineUpdated: jest.fn(),
+  emitMachineDeleted: jest.fn(),
+});
 
 type RepositoryMockType = ReturnType<typeof machinesRepositoryMock>;
+type KepwareServiceMockType = ReturnType<typeof kepwareServiceMock>;
 
 describe('MachinesService', () => {
   let machinesService: MachinesService;
   let machinesRepository: RepositoryMockType;
+  let kepwareService: KepwareServiceMockType;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -33,14 +40,15 @@ describe('MachinesService', () => {
           useFactory: machinesRepositoryMock,
         },
         {
-          provide: 'KEPWARE',
-          useFactory: clientProxy,
+          provide: KepwareService,
+          useFactory: kepwareServiceMock,
         },
       ],
     }).compile();
 
     machinesService = module.get(MachinesService);
     machinesRepository = module.get(MachinesRepository);
+    kepwareService = module.get(KepwareService);
   });
 
   it('MachinesService defined', () => {
@@ -75,7 +83,7 @@ describe('MachinesService', () => {
       );
     });
 
-    it('creates new machine', async () => {
+    it('creates new machine and sends it to the kepware queue', async () => {
       machinesRepository.create.mockImplementationOnce((data) => data);
 
       const machine = await machinesService.store(machineDto);
@@ -84,6 +92,15 @@ describe('MachinesService', () => {
       expect(machine.producent).toBe(machineDto.producent);
       expect(machine.type).toBe(machineDto.type);
       expect(machine.modelId).toBe(machineDto.modelId);
+
+      expect(kepwareService.emitMachineCreated).toBeCalledTimes(1);
+      expect(kepwareService.emitMachineCreated).toBeCalledWith({
+        serialNumber: machine.serialNumber,
+        productionRate: machine.productionRate,
+        status: machine.status,
+        version: machine.version,
+      });
+
       expect(machinesRepository.create).toBeCalledTimes(1);
     });
   });
@@ -147,7 +164,7 @@ describe('MachinesService', () => {
     const serialNumber = '123456';
     const machineDto = { productionRate: 20 };
 
-    it('updates machine and returns it', async () => {
+    it('updates machine, sends updated machine to kepware and returns machine', async () => {
       const machineMock = {
         ...machineDto,
         serialNumber,
@@ -159,6 +176,11 @@ describe('MachinesService', () => {
 
       expect(machinesRepository.update).toBeCalledTimes(1);
       expect(machine).toStrictEqual(machineMock);
+      expect(kepwareService.emitMachineUpdated).toBeCalledTimes(1);
+      expect(kepwareService.emitMachineUpdated).toBeCalledWith({
+        serialNumber: machineMock.serialNumber,
+        productionRate: machineMock.productionRate,
+      });
     });
 
     it('throws not found exception if machine not found', () => {
@@ -185,12 +207,16 @@ describe('MachinesService', () => {
   describe('destroy machine', () => {
     const serialNumber = '123456';
 
-    it('destroys machine and returns void', () => {
-      machinesRepository.delete.mockReturnValueOnce(null);
+    it('destroys machine, sends information to kepware and returns void', async () => {
+      machinesRepository.delete.mockReturnValueOnce({});
 
-      machinesService.destroy(serialNumber);
+      await machinesService.destroy(serialNumber);
 
       expect(machinesRepository.delete).toBeCalledTimes(1);
+      expect(kepwareService.emitMachineDeleted).toBeCalledTimes(1);
+      expect(kepwareService.emitMachineDeleted).toBeCalledWith({
+        serialNumber,
+      });
     });
 
     it('throws not found exception, machine was not found', () => {

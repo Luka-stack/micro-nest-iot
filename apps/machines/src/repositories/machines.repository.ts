@@ -101,6 +101,8 @@ export class MachinesRepository {
       await this.prisma.machine.delete({
         where: { serialNumber: serialNumber },
       });
+
+      return;
     } catch (err) {
       if (err.constructor.name === 'PrismaClientKnownRequestError') {
         if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2025') {

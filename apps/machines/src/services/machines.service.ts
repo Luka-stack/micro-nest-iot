@@ -1,22 +1,31 @@
-import { ClientProxy } from '@nestjs/microservices';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { QueryMachineDto } from '../dto/query-machine.dto';
 import { UpdateMachineDto } from '../dto/update-machine.dto';
 import { CreateMachineDto } from '../dto/create-machine.dto';
 import { MachineBo } from '../bos/machine.bo';
 import { MachinesRepository } from '../repositories/machines.repository';
+import { KepwareService } from './kepware.service';
 
 @Injectable()
 export class MachinesService {
   constructor(
     private readonly machinesRepository: MachinesRepository,
-    @Inject('KEPWARE') private readonly billingClient: ClientProxy,
+    private readonly kepwareService: KepwareService,
   ) {}
 
+  // Emit created machine to the kepware queue
   async store(machineDto: CreateMachineDto): Promise<MachineBo> {
     try {
-      return await this.machinesRepository.create(machineDto);
+      const machine = await this.machinesRepository.create(machineDto);
+      this.kepwareService.emitMachineCreated({
+        serialNumber: machine.serialNumber,
+        productionRate: machine.productionRate,
+        status: machine.status,
+        version: machine.version,
+      });
+
+      return machine;
     } catch (err) {
       throw err;
     }
@@ -38,6 +47,7 @@ export class MachinesService {
     }
   }
 
+  // Emit updated machine to the kepware queue
   async update(
     serialNumber: string,
     machineDto: UpdateMachineDto,
@@ -47,24 +57,32 @@ export class MachinesService {
     }
 
     try {
-      return await this.machinesRepository.update(serialNumber, machineDto);
+      const machine = await this.machinesRepository.update(
+        serialNumber,
+        machineDto,
+      );
+
+      this.kepwareService.emitMachineUpdated({
+        serialNumber: machine.serialNumber,
+        version: machine.version,
+        status: machineDto.status,
+        productionRate: machineDto.productionRate,
+      });
+
+      return machine;
     } catch (err) {
       throw err;
     }
   }
 
+  // Emit destroy machine / serial number
   async destroy(serialNumber: string): Promise<void> {
     try {
-      return await this.machinesRepository.delete(serialNumber);
+      await this.machinesRepository.delete(serialNumber);
+
+      this.kepwareService.emitMachineDeleted({ serialNumber: serialNumber });
     } catch (err) {
       throw err;
     }
   }
-
-  // changeStatus(request: { name: string; on: boolean }) {
-  //   this.billingClient.emit('device_status', {
-  //     request,
-  //   });
-  //   return { name: request.name, on: request.on };
-  // }
 }
