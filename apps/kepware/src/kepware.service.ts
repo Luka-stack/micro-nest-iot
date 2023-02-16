@@ -21,6 +21,7 @@ export class KepwareService {
   async store(data: MachineCreatedMessage['data']): Promise<void> {
     try {
       await this.kepwareRepository.create(data);
+      this.startSymulation(data.serialNumber, data.productionRate);
     } catch (err) {
       this.logger.error("Couldn't create machine");
     }
@@ -36,7 +37,10 @@ export class KepwareService {
       }
 
       if (data.status === 'IDLE' || data.status === 'MAINTENANCE') {
-        this.schedulerRegistry.deleteInterval(data.serialNumber);
+        if (this.schedulerRegistry.doesExist('interval', data.serialNumber)) {
+          this.schedulerRegistry.deleteInterval(data.serialNumber);
+          this.logger.debug(`Machine ${data.serialNumber} killed`);
+        }
       }
     } catch (err) {
       this.logger.error("Couldn't update machine");
@@ -44,6 +48,11 @@ export class KepwareService {
   }
 
   async delete(data: MachineDeletedMessage['data']): Promise<void> {
+    if (this.schedulerRegistry.doesExist('interval', data.serialNumber)) {
+      this.schedulerRegistry.deleteInterval(data.serialNumber);
+      this.logger.debug(`Machine ${data.serialNumber} killed`);
+    }
+
     this.schedulerRegistry.deleteInterval(data.serialNumber);
 
     try {
@@ -65,7 +74,9 @@ export class KepwareService {
   }
 
   private startSymulation(serialNumber: string, productionRate: number): void {
-    this.schedulerRegistry.deleteInterval(serialNumber);
+    if (this.schedulerRegistry.doesExist('interval', serialNumber)) {
+      this.schedulerRegistry.deleteInterval(serialNumber);
+    }
 
     const interval = setInterval(() => {
       this.logger.log(
@@ -74,5 +85,9 @@ export class KepwareService {
     }, productionRate * 1000);
 
     this.schedulerRegistry.addInterval(serialNumber, interval);
+
+    this.logger.log(
+      `Started symulation for machine ${serialNumber} with rate ${productionRate}s`,
+    );
   }
 }

@@ -1,8 +1,9 @@
 import { CommunicationModule } from '@iot/communication';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule/dist';
+import { ScheduleModule } from '@nestjs/schedule';
 import * as Joi from 'joi';
+
 import { KepwareController } from './kepware.controller';
 import { KepwareService } from './kepware.service';
 import { KepwareRepository } from './repositories/kepware.repository';

@@ -14,10 +14,10 @@ export class MachinesService {
     private readonly kepwareService: KepwareService,
   ) {}
 
-  // Emit created machine to the kepware queue
   async store(machineDto: CreateMachineDto): Promise<MachineBo> {
     try {
       const machine = await this.machinesRepository.create(machineDto);
+
       this.kepwareService.emitMachineCreated({
         serialNumber: machine.serialNumber,
         productionRate: machine.productionRate,
@@ -47,7 +47,6 @@ export class MachinesService {
     }
   }
 
-  // Emit updated machine to the kepware queue
   async update(
     serialNumber: string,
     machineDto: UpdateMachineDto,
@@ -75,7 +74,6 @@ export class MachinesService {
     }
   }
 
-  // Emit destroy machine / serial number
   async destroy(serialNumber: string): Promise<void> {
     try {
       await this.machinesRepository.delete(serialNumber);
