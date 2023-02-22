@@ -8,6 +8,7 @@ import { Test } from '@nestjs/testing';
 import { MachinesService } from '../../src/services/machines.service';
 import { MachinesRepository } from '../../src/repositories/machines.repository';
 import { KepwareService } from '../../src/services/kepware.service';
+import { instanceToPlain } from 'class-transformer';
 
 const machinesRepositoryMock = () => ({
   create: jest.fn(),
@@ -15,6 +16,7 @@ const machinesRepositoryMock = () => ({
   findMany: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  getTotalCount: jest.fn(),
 });
 
 const kepwareServiceMock = () => ({
@@ -60,7 +62,7 @@ describe('MachinesService', () => {
       serialNumber: '123',
       producent: 'Producent',
       type: 'Type',
-      modelId: 1,
+      model: 'Model',
     };
 
     it('throws bad request when repository throws bad request', async () => {
@@ -86,19 +88,19 @@ describe('MachinesService', () => {
     it('creates new machine and sends it to the kepware queue', async () => {
       machinesRepository.create.mockImplementationOnce((data) => data);
 
-      const machine = await machinesService.store(machineDto);
+      const { data } = await machinesService.store(machineDto);
 
-      expect(machine.serialNumber).toBe(machineDto.serialNumber);
-      expect(machine.producent).toBe(machineDto.producent);
-      expect(machine.type).toBe(machineDto.type);
-      expect(machine.modelId).toBe(machineDto.modelId);
+      expect(data.serialNumber).toBe(machineDto.serialNumber);
+      expect(data.producent).toBe(machineDto.producent);
+      expect(data.type).toBe(machineDto.type);
+      expect(data.model).toBe(machineDto.model);
 
       expect(kepwareService.emitMachineCreated).toBeCalledTimes(1);
       expect(kepwareService.emitMachineCreated).toBeCalledWith({
-        serialNumber: machine.serialNumber,
-        productionRate: machine.productionRate,
-        status: machine.status,
-        version: machine.version,
+        serialNumber: data.serialNumber,
+        productionRate: data.productionRate,
+        status: data.status,
+        version: data.version,
       });
 
       expect(machinesRepository.create).toBeCalledTimes(1);
@@ -117,10 +119,10 @@ describe('MachinesService', () => {
     it('returns a machine', async () => {
       machinesRepository.findOne.mockReturnValueOnce(machineMock);
 
-      const machine = await machinesService.findOne(serialNumber);
+      const { data } = await machinesService.findOne(serialNumber);
 
-      expect(machine.serialNumber).toBe(machineMock.serialNumber);
-      expect(machine.producent).toBe(machineMock.producent);
+      expect(data.serialNumber).toBe(machineMock.serialNumber);
+      expect(data.producent).toBe(machineMock.producent);
       expect(machinesRepository.findOne).toBeCalledTimes(1);
     });
 
@@ -136,12 +138,25 @@ describe('MachinesService', () => {
   });
 
   describe('find many', () => {
+    const totalNumberOfRecords = 50;
+
     it('returns empty list of machines', async () => {
       machinesRepository.findMany.mockReturnValueOnce([]);
+      machinesRepository.getTotalCount.mockReturnValueOnce(
+        totalNumberOfRecords,
+      );
 
-      const result = await machinesService.findMany({});
+      const { data, meta } = await machinesService.findMany({});
 
-      expect(result.length).toEqual(0);
+      expect(data.length).toEqual(0);
+      expect(meta).toStrictEqual({
+        count: 0,
+        offset: 0,
+        limit: 0,
+        total: totalNumberOfRecords,
+      });
+
+      expect(machinesRepository.getTotalCount).toBeCalledTimes(1);
       expect(machinesRepository.findMany).toBeCalledTimes(1);
     });
 
@@ -150,12 +165,64 @@ describe('MachinesService', () => {
       const machine2 = { id: 2, serialNumber: '099' };
 
       machinesRepository.findMany.mockReturnValueOnce([machine1, machine2]);
+      machinesRepository.getTotalCount.mockReturnValueOnce(
+        totalNumberOfRecords,
+      );
 
-      const result = await machinesService.findMany({});
+      const { data, meta } = await machinesService.findMany({});
 
-      expect(result.length).toEqual(2);
-      expect(result[0]).toStrictEqual(machine1);
-      expect(result[1]).toStrictEqual(machine2);
+      expect(data.length).toEqual(2);
+      expect(instanceToPlain(data[0])).toStrictEqual({
+        serialNumber: machine1.serialNumber,
+      });
+      expect(instanceToPlain(data[1])).toStrictEqual({
+        serialNumber: machine2.serialNumber,
+      });
+
+      expect(meta).toStrictEqual({
+        count: 2,
+        offset: 0,
+        limit: 2,
+        total: totalNumberOfRecords,
+      });
+
+      expect(machinesRepository.getTotalCount).toBeCalledTimes(1);
+      expect(machinesRepository.findMany).toBeCalledTimes(1);
+    });
+
+    it('returns correct pagination meta data', async () => {
+      const limit = 10;
+      const offset = 20;
+
+      const machine1 = { id: 1, serialNumber: '123' };
+      const machine2 = { id: 2, serialNumber: '099' };
+
+      machinesRepository.findMany.mockReturnValueOnce([machine1, machine2]);
+      machinesRepository.getTotalCount.mockReturnValueOnce(
+        totalNumberOfRecords,
+      );
+
+      const { data, meta } = await machinesService.findMany({
+        limit: limit + '',
+        offset: offset + '',
+      });
+
+      expect(data.length).toEqual(2);
+      expect(instanceToPlain(data[0])).toStrictEqual({
+        serialNumber: machine1.serialNumber,
+      });
+      expect(instanceToPlain(data[1])).toStrictEqual({
+        serialNumber: machine2.serialNumber,
+      });
+
+      expect(meta).toStrictEqual({
+        count: 2,
+        offset,
+        limit,
+        total: totalNumberOfRecords,
+      });
+
+      expect(machinesRepository.getTotalCount).toBeCalledTimes(1);
       expect(machinesRepository.findMany).toBeCalledTimes(1);
     });
   });
@@ -172,10 +239,10 @@ describe('MachinesService', () => {
 
       machinesRepository.update.mockReturnValueOnce(machineMock);
 
-      const machine = await machinesService.update(serialNumber, machineDto);
+      const { data } = await machinesService.update(serialNumber, machineDto);
 
       expect(machinesRepository.update).toBeCalledTimes(1);
-      expect(machine).toStrictEqual(machineMock);
+      expect(instanceToPlain(data)).toStrictEqual(machineMock);
       expect(kepwareService.emitMachineUpdated).toBeCalledTimes(1);
       expect(kepwareService.emitMachineUpdated).toBeCalledWith({
         serialNumber: machineMock.serialNumber,

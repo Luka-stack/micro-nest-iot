@@ -1,24 +1,30 @@
 import { Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 
-import { MachineLabelsBo } from '../bos/machine-labels.bo';
+import { MachineModelDto } from '../dto/machine-model.dto';
+import { MachineProducentDto } from '../dto/machine-producent.dto';
+import { MachineTypeDto } from '../dto/machine-type.dto';
+import { ResponseFiltersDto } from '../dto/outcoming/response-filters.dto';
+
 import { MiscRepository } from '../repositories/misc.repository';
 
 @Injectable()
 export class MiscService {
   constructor(private readonly miscRepository: MiscRepository) {}
 
-  async findMachinesLabels(): Promise<MachineLabelsBo> {
-    const data = await Promise.all([
+  async getAllFilters(): Promise<ResponseFiltersDto> {
+    const [producents, types, models] = await Promise.all([
       this.miscRepository.findProducents(),
-      this.miscRepository.findTypes(),
-      this.miscRepository.findModels(),
+      this.miscRepository.findTypesIncludeProducent(),
+      this.miscRepository.findModelsIncludeRelations(),
     ]);
 
-    const machineLabels = new MachineLabelsBo();
-    machineLabels.machineProducents = data[0];
-    machineLabels.machineTypes = data[1];
-    machineLabels.machineModels = data[2];
-
-    return machineLabels;
+    return {
+      data: {
+        producents: plainToInstance(MachineProducentDto, producents),
+        types: MachineTypeDto.fromList(types),
+        models: MachineModelDto.fromList(models),
+      },
+    };
   }
 }

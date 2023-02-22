@@ -4,4 +4,4 @@ export const seed = async () => {
   await Promise.all([seedMachinesDB()]);
 };
 
-// seed();
+seed();

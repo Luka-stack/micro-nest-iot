@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
-import { QueryMachineDto } from '../dto/query-machine.dto';
-import { UpdateMachineDto } from '../dto/update-machine.dto';
-import { CreateMachineDto } from '../dto/create-machine.dto';
-import { MachineBo } from '../bos/machine.bo';
+import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
+import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
+import { CreateMachineDto } from '../dto/incoming/create-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { KepwareService } from './kepware.service';
+import { plainToInstance } from 'class-transformer';
+import { MachineDto } from '../dto/machine.dto';
+import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
+import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 
 @Injectable()
 export class MachinesService {
@@ -14,7 +17,7 @@ export class MachinesService {
     private readonly kepwareService: KepwareService,
   ) {}
 
-  async store(machineDto: CreateMachineDto): Promise<MachineBo> {
+  async store(machineDto: CreateMachineDto): Promise<ResponseMachineDto> {
     try {
       const machine = await this.machinesRepository.create(machineDto);
 
@@ -25,32 +28,46 @@ export class MachinesService {
         version: machine.version,
       });
 
-      return machine;
+      return { data: plainToInstance(MachineDto, machine) };
     } catch (err) {
       throw err;
     }
   }
 
-  async findOne(serialNumber: string): Promise<MachineBo> {
+  async findOne(serialNumber: string): Promise<ResponseMachineDto> {
     try {
-      return await this.machinesRepository.findOne(serialNumber);
+      const data = plainToInstance(
+        MachineDto,
+        await this.machinesRepository.findOne(serialNumber),
+      );
+
+      return { data };
     } catch (err) {
       throw err;
     }
   }
 
-  async findMany(queryDto: QueryMachineDto): Promise<MachineBo[]> {
-    try {
-      return await this.machinesRepository.findMany(queryDto);
-    } catch (err) {
-      throw err;
-    }
+  async findMany(queryDto: QueryMachineDto): Promise<ResponseMachinesDto> {
+    const machines = await this.machinesRepository.findMany(queryDto);
+    const totalCount = await this.machinesRepository.getTotalCount();
+
+    const data = plainToInstance(MachineDto, machines);
+
+    return {
+      data,
+      meta: {
+        count: data.length,
+        offset: Number(queryDto.offset) || 0,
+        limit: Number(queryDto.limit) || data.length,
+        total: totalCount,
+      },
+    };
   }
 
   async update(
     serialNumber: string,
     machineDto: UpdateMachineDto,
-  ): Promise<MachineBo> {
+  ): Promise<ResponseMachineDto> {
     if (!machineDto.productionRate && !machineDto.status) {
       throw new BadRequestException('At least one field must change');
     }
@@ -68,7 +85,7 @@ export class MachinesService {
         productionRate: machineDto.productionRate,
       });
 
-      return machine;
+      return { data: plainToInstance(MachineDto, machine) };
     } catch (err) {
       throw err;
     }

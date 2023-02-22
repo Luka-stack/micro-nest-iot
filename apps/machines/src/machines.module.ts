@@ -10,6 +10,7 @@ import { MachinesRepository } from './repositories/machines.repository';
 import { MiscRepository } from './repositories/misc.repository';
 import { KEPWARE_QUEUE } from './constants/queues';
 import { KepwareService } from './services/kepware.service';
+import { MiscController } from './controllers/misc.controller';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { KepwareService } from './services/kepware.service';
     }),
     CommunicationModule.register({ name: KEPWARE_QUEUE }),
   ],
-  controllers: [MachinesController],
+  controllers: [MachinesController, MiscController],
   providers: [
     MachinesService,
     MiscService,

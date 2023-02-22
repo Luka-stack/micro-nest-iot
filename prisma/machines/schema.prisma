@@ -19,34 +19,35 @@ enum Status {
 }
 
 model Producent {
-  id    Int    @id @default(autoincrement())
-  name  String @unique
-  types Type[]
+  id     Int     @id @default(autoincrement())
+  name   String  @unique
+  types  Type[]
+  models Model[]
 }
 
 model Type {
-  id          Int       @id @default(autoincrement())
-  name        String
-  producent   Producent @relation(fields: [producentId], references: [id])
-  producentId Int
-  Model       Model[]
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  producents Producent[]
+  models     Model[]
 }
 
 model Model {
-  id      Int       @id @default(autoincrement())
-  name    String
-  type    Type      @relation(fields: [typeId], references: [id])
-  typeId  Int
-  Machine Machine[]
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  type        Type      @relation(fields: [typeId], references: [id])
+  typeId      Int
+  producent   Producent @relation(fields: [producentId], references: [id])
+  producentId Int
 }
 
 model Machine {
   id             Int       @id @default(autoincrement())
   serialNumber   String    @unique
+  imageUrl       String
   producent      String
   type           String
-  model          Model     @relation(fields: [modelId], references: [id])
-  modelId        Int
+  model          String
   status         Status
   startedAt      DateTime?
   productionRate Int

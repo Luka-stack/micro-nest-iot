@@ -67,19 +67,22 @@ describe('MiscRepository', () => {
       const typeOne = {
         id: 1,
         name: 'Type #1',
+        producents: [{ name: 'Prod #1' }],
       };
 
       const typeTwo = {
         id: 2,
         name: 'Type #2',
+        producents: [{ name: 'Prod #2' }],
       };
 
       prismaService.type.findMany.mockReturnValue([typeOne, typeTwo]);
 
-      const types = await miscRepository.findTypes();
+      const types = await miscRepository.findTypesIncludeProducent();
 
       expect(types.length).toEqual(2);
       expect(types[0].id).toEqual(typeOne.id);
+      expect(types[0].producents.length).toBe(1);
       expect(types[1].name).toEqual(typeTwo.name);
     });
   });
@@ -89,20 +92,26 @@ describe('MiscRepository', () => {
       const modelOne = {
         id: 1,
         name: 'Model #1',
+        type: 'Type #1',
+        producent: 'Prod #1',
       };
 
       const modelTwo = {
         id: 2,
         name: 'Model #2',
+        type: 'Type #2',
+        producent: 'Prod #3',
       };
 
       prismaService.model.findMany.mockReturnValue([modelOne, modelTwo]);
 
-      const models = await miscRepository.findModels();
+      const models = await miscRepository.findModelsIncludeRelations();
 
       expect(models.length).toEqual(2);
       expect(models[0].id).toEqual(modelOne.id);
+      expect(models[0].type).toEqual(modelOne.type);
       expect(models[1].name).toEqual(modelTwo.name);
+      expect(models[1].producent).toEqual(modelTwo.producent);
     });
   });
 });

@@ -8,8 +8,8 @@ import { Prisma } from '@prisma/client';
 import { Machine as MachineModel } from '@prisma/db-machines';
 
 import { PrismaService } from '../../src/repositories/prisma.service';
-import { QueryMachineDto } from '../../src/dto/query-machine.dto';
 import { MachinesRepository } from '../../src/repositories/machines.repository';
+import { QueryMachineDto } from '../../src/dto/incoming/query-machine.dto';
 
 const prismaServiceMock = () => ({
   machine: {
@@ -51,7 +51,7 @@ describe('MachinesRepository', () => {
       serialNumber: '123',
       producent: 'Producent',
       type: 'Type',
-      modelId: 1,
+      model: 'Model',
     };
 
     it('throws bad request because machine with provided serial number exists', async () => {
@@ -98,7 +98,7 @@ describe('MachinesRepository', () => {
       expect(machine.serialNumber).toBe(machineDto.serialNumber);
       expect(machine.producent).toBe(machineDto.producent);
       expect(machine.type).toBe(machineDto.type);
-      expect(machine.modelId).toBe(machineDto.modelId);
+      expect(machine.model).toBe(machineDto.model);
       expect(prismaService.machine.create).toBeCalledTimes(1);
     });
 
@@ -146,7 +146,20 @@ describe('MachinesRepository', () => {
   });
 
   describe('query builder', () => {
-    it('returns correctly build query for product', async () => {
+    it('returns correctly build query for serialNumber', async () => {
+      const machineQuery = new QueryMachineDto();
+      machineQuery.serialNumber = 'xxx-xxx-xxx';
+      const query = machinesRepository.queryBuilder(machineQuery);
+
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        serialNumber: {
+          contains: machineQuery.serialNumber,
+        },
+      });
+    });
+
+    it('returns correctly build query for producent', async () => {
       const machineQuery = new QueryMachineDto();
       machineQuery.producents = 'Producent';
       const query = machinesRepository.queryBuilder(machineQuery);
@@ -155,11 +168,18 @@ describe('MachinesRepository', () => {
       machineQuery2.producents = 'Prod 1, Prod 2';
       const query2 = machinesRepository.queryBuilder(machineQuery2);
 
-      expect(query.producent).toStrictEqual({
-        in: machineQuery.producents.split(','),
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        producent: {
+          in: machineQuery.producents.split(','),
+        },
       });
-      expect(query2.producent).toStrictEqual({
-        in: machineQuery2.producents.split(','),
+
+      expect(query2.length).toBe(1);
+      expect(query2[0]).toStrictEqual({
+        producent: {
+          in: machineQuery2.producents.split(','),
+        },
       });
     });
 
@@ -172,11 +192,18 @@ describe('MachinesRepository', () => {
       machineQuery2.types = 'Type 1, Type 2';
       const query2 = machinesRepository.queryBuilder(machineQuery2);
 
-      expect(query.type).toStrictEqual({
-        in: machineQuery.types.split(','),
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        type: {
+          in: machineQuery.types.split(','),
+        },
       });
-      expect(query2.type).toStrictEqual({
-        in: machineQuery2.types.split(','),
+
+      expect(query2.length).toBe(1);
+      expect(query2[0]).toStrictEqual({
+        type: {
+          in: machineQuery2.types.split(','),
+        },
       });
     });
 
@@ -189,11 +216,14 @@ describe('MachinesRepository', () => {
       machineQuery2.models = 'Model 1, Model 2';
       const query2 = machinesRepository.queryBuilder(machineQuery2);
 
-      expect(query.model).toStrictEqual({
-        name: { in: machineQuery.models.split(',') },
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        model: { in: machineQuery.models.split(',') },
       });
-      expect(query2.model).toStrictEqual({
-        name: { in: machineQuery2.models.split(',') },
+
+      expect(query2.length).toBe(1);
+      expect(query2[0]).toStrictEqual({
+        model: { in: machineQuery2.models.split(',') },
       });
     });
 
@@ -203,18 +233,25 @@ describe('MachinesRepository', () => {
       const query = machinesRepository.queryBuilder(machineQuery);
 
       const machineQuery2 = new QueryMachineDto();
-      machineQuery2.status = 'idle, BroKen';
+      machineQuery2.status = 'idle,BroKen';
       const query2 = machinesRepository.queryBuilder(machineQuery2);
 
-      expect(query.status).toStrictEqual({
-        in: machineQuery.status
-          .split(',')
-          .map((status) => status.toUpperCase()),
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        status: {
+          in: machineQuery.status
+            .split(',')
+            .map((status) => status.toUpperCase()),
+        },
       });
-      expect(query2.status).toStrictEqual({
-        in: machineQuery2.status
-          .split(',')
-          .map((status) => status.toUpperCase()),
+
+      expect(query2.length).toBe(1);
+      expect(query2[0]).toStrictEqual({
+        status: {
+          in: machineQuery2.status
+            .split(',')
+            .map((status) => status.toUpperCase()),
+        },
       });
     });
 
@@ -224,7 +261,8 @@ describe('MachinesRepository', () => {
       machineQuery.rateFilter = 'lt';
       const query = machinesRepository.queryBuilder(machineQuery);
 
-      expect(query.productionRate).toStrictEqual({ lt: 20 });
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({ productionRate: { lt: 20 } });
     });
 
     it('returns correctly build query for productionRate with default filter', async () => {
@@ -232,7 +270,8 @@ describe('MachinesRepository', () => {
       machineQuery.rate = '20';
       const query = machinesRepository.queryBuilder(machineQuery);
 
-      expect(query.productionRate).toStrictEqual({ equals: 20 });
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({ productionRate: { equals: 20 } });
     });
 
     it('returns correctly build query for startedAt', async () => {
@@ -241,31 +280,32 @@ describe('MachinesRepository', () => {
       machineQuery.startedAtFilter = 'gt';
       const query = machinesRepository.queryBuilder(machineQuery);
 
-      expect(query.startedAt).toStrictEqual({
-        gt: new Date(machineQuery.startedAt),
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        startedAt: {
+          gt: new Date(machineQuery.startedAt),
+        },
       });
     });
 
-    it('returns correctly build query for model with default filter', async () => {
+    it('returns correctly build query for startedAt with default filter', async () => {
       const machineQuery = new QueryMachineDto();
       machineQuery.startedAt = '2023-02-04';
       const query = machinesRepository.queryBuilder(machineQuery);
 
-      expect(query.startedAt).toStrictEqual({
-        equals: new Date(machineQuery.startedAt),
+      expect(query.length).toBe(1);
+      expect(query[0]).toStrictEqual({
+        startedAt: {
+          equals: new Date(machineQuery.startedAt),
+        },
       });
     });
 
-    it('returns empty objects if no query passed', () => {
+    it('returns empty list if no query passed', () => {
       const machineQuery = new QueryMachineDto();
       const query = machinesRepository.queryBuilder(machineQuery);
 
-      expect(query.producent).toStrictEqual({});
-      expect(query.type).toStrictEqual({});
-      expect(query.model).toStrictEqual({});
-      expect(query.status).toStrictEqual({});
-      expect(query.productionRate).toStrictEqual({});
-      expect(query.startedAt).toStrictEqual({});
+      expect(query.length).toBe(0);
     });
   });
 

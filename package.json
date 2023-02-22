@@ -19,6 +19,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/micro-iot/test/jest-e2e.json",
+    "db:seed": "prisma db seed",
     "prisma:migrate:machines": "prisma migrate dev --schema prisma/machines/schema.prisma",
     "prisma:migrate:kepware": "prisma migrate dev --schema prisma/kepware/schema.prisma",
     "prisma:generate:machines": "prisma generate --schema prisma/machines/schema.prisma",

@@ -1,8 +1,13 @@
 import { IsDateString, IsNumberString, IsOptional } from 'class-validator';
-import { IsFilter } from '../decorators/is-filter';
-import { IsMachineStatus } from '../decorators/is-machine-status';
 
-export class QueryMachineDto {
+import { IsFilter } from '../../decorators/is-filter';
+import { IsMachineStatus } from '../../decorators/is-machine-status';
+import { QueryPaginationDto } from './query-pagination.dto';
+
+export class QueryMachineDto extends QueryPaginationDto {
+  @IsOptional()
+  serialNumber?: string;
+
   @IsOptional()
   producents?: string;
 

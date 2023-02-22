@@ -6,6 +6,7 @@ import { TransformInterceptor } from './transfrom.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(MachinesModule);
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor());
   app.setGlobalPrefix('api');

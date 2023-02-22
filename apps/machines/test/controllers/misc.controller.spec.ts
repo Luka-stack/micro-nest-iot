@@ -2,13 +2,13 @@ import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { MachineLabelsBo } from '../../src/bos/machine-labels.bo';
 import { MiscController } from '../../src/controllers/misc.controller';
 import { MiscService } from '../../src/services/misc.service';
 import { TransformInterceptor } from '../../src/transfrom.interceptor';
+import { ResponseFiltersDto } from 'apps/machines/src/dto/outcoming/response-filters.dto';
 
 const mockMiscService = () => ({
-  findMachinesLabels: jest.fn(),
+  getAllFilters: jest.fn(),
 });
 
 type MiscServiceMock = ReturnType<typeof mockMiscService>;
@@ -39,20 +39,23 @@ describe('MiscController', () => {
 
   describe('(GET) find machines labels', () => {
     it('return machine producents, types and models in one object', async () => {
-      const machineLabels = new MachineLabelsBo();
-      machineLabels.machineProducents = [{ id: 1, name: 'Prod' }];
-      machineLabels.machineTypes = [{ id: 1, name: 'Type', producentId: 1 }];
-      machineLabels.machineModels = [{ id: 1, name: 'Model', typeId: 1 }];
+      const filters: ResponseFiltersDto = {
+        data: {
+          producents: [{ id: 1, name: 'prod #1' }],
+          types: [{ name: 'type #1', producents: ['prod #1'] }],
+          models: [{ name: 'model #1', producent: 'prod #1', type: 'type #1' }],
+        },
+      };
 
-      miscService.findMachinesLabels.mockReturnValue(machineLabels);
+      miscService.getAllFilters.mockReturnValue(filters);
 
       const { body } = await request(app.getHttpServer())
-        .get('/api/misc/machine-labels')
+        .get('/api/misc/filters')
         .expect(200);
 
-      expect(body.machineProducents).toBeDefined();
-      expect(body.machineTypes).toBeDefined();
-      expect(body.machineModels).toBeDefined();
+      expect(body.data.producents).toBeDefined();
+      expect(body.data.types).toBeDefined();
+      expect(body.data.models).toBeDefined();
     });
   });
 });
