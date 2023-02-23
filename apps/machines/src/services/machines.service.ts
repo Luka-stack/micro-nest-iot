@@ -48,8 +48,9 @@ export class MachinesService {
   }
 
   async findMany(queryDto: QueryMachineDto): Promise<ResponseMachinesDto> {
-    const machines = await this.machinesRepository.findMany(queryDto);
-    const totalCount = await this.machinesRepository.getTotalCount();
+    const { machines, total } = await this.machinesRepository.paginate(
+      queryDto,
+    );
 
     const data = plainToInstance(MachineDto, machines);
 
@@ -59,7 +60,7 @@ export class MachinesService {
         count: data.length,
         offset: Number(queryDto.offset) || 0,
         limit: Number(queryDto.limit) || data.length,
-        total: totalCount,
+        total: total,
       },
     };
   }

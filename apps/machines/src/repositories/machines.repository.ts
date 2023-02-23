@@ -139,6 +139,26 @@ export class MachinesRepository {
     });
   }
 
+  async paginate(queryDto: QueryMachineDto) {
+    const query = this.queryBuilder(queryDto);
+
+    const take = Number(queryDto.limit) || this.defaultLimit;
+    const skip = Number(queryDto.offset) || 0;
+
+    const [machines, total] = await this.prisma.$transaction([
+      this.prisma.machine.findMany({
+        where: {
+          AND: query,
+        },
+        take,
+        skip,
+      }),
+      this.prisma.machine.count({ where: { AND: query } }),
+    ]);
+
+    return { machines, total };
+  }
+
   queryBuilder(queryDto: QueryMachineDto) {
     const query = [];
 
