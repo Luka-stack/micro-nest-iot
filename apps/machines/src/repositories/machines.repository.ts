@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/db-machines';
 import { Machine as MachineModel } from '@prisma/db-machines';
 
 import { PrismaService } from './prisma.service';
