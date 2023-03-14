@@ -7,8 +7,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { MachineBo } from '../bos/machine.bo';
+import { Prisma } from '@prisma/db-kepware';
 
 import { PrismaService } from './prisma.service';
 
@@ -30,7 +29,7 @@ export class KepwareRepository {
     }
   }
 
-  async update(data: MachineUpdatedMessage['data']): Promise<void> {
+  async update(data: MachineUpdatedMessage['data']) {
     const machine = await this.prisma.machine.findUnique({
       where: { serialNumber: data.serialNumber },
     });
@@ -46,7 +45,7 @@ export class KepwareRepository {
     const { serialNumber, ...rest } = data;
 
     try {
-      await this.prisma.machine.update({
+      return await this.prisma.machine.update({
         where: { serialNumber: machine.serialNumber },
         data: rest,
       });
@@ -59,9 +58,8 @@ export class KepwareRepository {
     }
   }
 
-  async findMany(): Promise<MachineBo[]> {
-    const machines = await this.prisma.machine.findMany();
-    return MachineBo.fromList(machines);
+  async findMany() {
+    return this.prisma.machine.findMany();
   }
 
   async delete(serialNumber: string): Promise<void> {

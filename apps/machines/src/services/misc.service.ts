@@ -22,8 +22,8 @@ export class MiscService {
     return {
       data: {
         producents: plainToInstance(MachineProducentDto, producents),
-        types: MachineTypeDto.fromList(types),
-        models: MachineModelDto.fromList(models),
+        types: plainToInstance(MachineTypeDto, types),
+        models: plainToInstance(MachineModelDto, models),
       },
     };
   }

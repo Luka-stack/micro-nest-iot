@@ -1,7 +1,7 @@
-import { Subjects } from './subjects';
+import { MachineSubjects } from './subjects';
 
 export interface MachineUpdatedMessage {
-  message: Subjects.MachineUpdated;
+  message: MachineSubjects.MachineUpdated;
   data: {
     serialNumber: string;
     status?: string;

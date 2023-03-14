@@ -1,7 +1,7 @@
-import { Subjects } from './subjects';
+import { MachineSubjects } from './subjects';
 
 export interface MachineDeletedMessage {
-  message: Subjects.MachineDeleted;
+  message: MachineSubjects.MachineDeleted;
   data: {
     serialNumber: string;
   };

@@ -1,26 +1,33 @@
-import { Model } from '@prisma/db-machines';
+import { Model as MachineModel } from '@prisma/db-machines';
+import { Exclude, Expose, Transform } from 'class-transformer';
 
-type ModelWithRelations = Model & {
-  type: { name: string };
-  producent: { name: string };
-};
+export class MachineModelDto implements MachineModel {
+  @Exclude()
+  id: number;
 
-export class MachineModelDto {
-  constructor(
-    readonly name: string,
-    readonly type: string,
-    readonly producent: string,
-  ) {}
+  name: string;
 
-  static from(model: ModelWithRelations): MachineModelDto {
-    return new MachineModelDto(
-      model.name,
-      model.type.name,
-      model.producent.name,
-    );
-  }
+  @Expose({ groups: ['machine'] })
+  workBase: number;
 
-  static fromList(models: ModelWithRelations[]): MachineModelDto[] {
-    return models.map((model) => MachineModelDto.from(model));
-  }
+  @Expose({ groups: ['machine'] })
+  workRange: number;
+
+  @Expose({ groups: ['machine'] })
+  faultRate: number;
+
+  @Expose({ groups: ['machine'] })
+  defaultRate: number;
+
+  @Transform(({ value }) => value.name)
+  producent: string;
+
+  @Transform(({ value }) => value.name)
+  type: string;
+
+  @Exclude()
+  typeId: number;
+
+  @Exclude()
+  producentId: number;
 }

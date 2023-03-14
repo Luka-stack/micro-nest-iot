@@ -1,22 +1,19 @@
-import { Type as MachineType } from '@prisma/db-machines';
+import {
+  Type as MachineType,
+  Producent as MachineProducent,
+} from '@prisma/db-machines';
+import { Exclude, Transform } from 'class-transformer';
 
-type TypeWithProducents = MachineType & {
-  producents: {
-    name: string;
-  }[];
-};
+export class MachineTypeDto implements MachineType {
+  @Exclude()
+  id: number;
 
-export class MachineTypeDto {
-  constructor(readonly name: string, readonly producents: string[]) {}
+  name: string;
 
-  static from(model: TypeWithProducents): MachineTypeDto {
-    return new MachineTypeDto(
-      model.name,
-      model.producents.map((prod) => prod.name),
-    );
-  }
+  imageUrl: string;
 
-  static fromList(models: TypeWithProducents[]): MachineTypeDto[] {
-    return models.map((model) => MachineTypeDto.from(model));
-  }
+  @Transform(({ value }) => {
+    return value.map((p: MachineProducent) => p.name);
+  })
+  producents: string[];
 }

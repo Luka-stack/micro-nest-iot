@@ -16,5 +16,9 @@ model Machine {
     serialNumber   String @unique
     status         String
     productionRate Int
+    workBase       Int
+    workRange      Int
+    faultRate      Int
+    defaultRate    Int
     version        Int
 }

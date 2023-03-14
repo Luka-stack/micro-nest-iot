@@ -29,16 +29,32 @@ export class MachinesRepository {
 
   async create(machineDto: CreateMachineDto) {
     try {
-      const data = {
-        ...machineDto,
-        imageUrl: MachinesRepository.generateImage(machineDto.type),
-        productionRate: 10,
-        status: 'IDLE' as MachineModel['status'],
-        version: 1,
-      };
+      const model = await this.prisma.model.findUniqueOrThrow({
+        where: { name: machineDto.model },
+      });
 
       const machine = await this.prisma.machine.create({
-        data,
+        data: {
+          serialNumber: machineDto.serialNumber,
+          producent: machineDto.producent,
+          productionRate: model.defaultRate,
+          status: 'IDLE' as MachineModel['status'],
+          version: 1,
+          type: {
+            connect: {
+              name: machineDto.type,
+            },
+          },
+          model: {
+            connect: {
+              name: machineDto.model,
+            },
+          },
+        },
+        include: {
+          type: true,
+          model: true,
+        },
       });
 
       this.totalCount += 1;
@@ -64,6 +80,10 @@ export class MachinesRepository {
   async findOne(serialNumber: string) {
     const machine = await this.prisma.machine.findUnique({
       where: { serialNumber: serialNumber },
+      include: {
+        type: true,
+        model: true,
+      },
     });
 
     if (!machine) {
@@ -98,6 +118,10 @@ export class MachinesRepository {
       const machine = await this.prisma.machine.update({
         where: { serialNumber: serialNumber },
         data,
+        include: {
+          type: true,
+          model: true,
+        },
       });
 
       return machine;
@@ -136,6 +160,10 @@ export class MachinesRepository {
       },
       take,
       skip,
+      include: {
+        type: true,
+        model: true,
+      },
     });
   }
 
@@ -152,6 +180,10 @@ export class MachinesRepository {
         },
         take,
         skip,
+        include: {
+          type: true,
+          model: true,
+        },
       }),
       this.prisma.machine.count({ where: { AND: query } }),
     ]);
@@ -181,13 +213,15 @@ export class MachinesRepository {
     if (queryDto.types) {
       query.push({
         type: {
-          in: queryDto.types.split(','),
+          name: {
+            in: queryDto.types.split(','),
+          },
         },
       });
     }
 
     if (queryDto.models) {
-      query.push({ model: { in: queryDto.models.split(',') } });
+      query.push({ model: { name: { in: queryDto.models.split(',') } } });
     }
 
     if (queryDto.status) {
@@ -215,16 +249,5 @@ export class MachinesRepository {
     }
 
     return query;
-  }
-
-  private static generateImage(type: string): string {
-    switch (type) {
-      case 'Grabers':
-        return 'machine.png';
-      case 'Multies':
-        return 'machine.png';
-      default:
-        return 'not-found.png';
-    }
   }
 }

@@ -26,6 +26,10 @@ export class MachinesService {
         productionRate: machine.productionRate,
         status: machine.status,
         version: machine.version,
+        workBase: machine.model.workBase,
+        workRange: machine.model.workRange,
+        faultRate: machine.model.faultRate,
+        defaultRate: machine.model.defaultRate,
       });
 
       return { data: plainToInstance(MachineDto, machine) };

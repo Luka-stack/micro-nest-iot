@@ -35,6 +35,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/machines/tsconfig.app.json"
       }
+    },
+    "analyser": {
+      "type": "application",
+      "root": "apps/analyser",
+      "entryFile": "main",
+      "sourceRoot": "apps/analyser/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analyser/tsconfig.app.json"
+      }
     }
   }
 }

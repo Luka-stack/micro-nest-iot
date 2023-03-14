@@ -3,9 +3,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import * as Joi from 'joi';
+import { ANALYSER_QUEUE } from './constants/queues';
 
 import { KepwareController } from './kepware.controller';
-import { KepwareService } from './kepware.service';
+import { KepwareService } from './services/kepware.service';
 import { KepwareRepository } from './repositories/kepware.repository';
 import { PrismaService } from './repositories/prisma.service';
 
@@ -20,6 +21,7 @@ import { PrismaService } from './repositories/prisma.service';
       envFilePath: './apps/kepware/.env',
     }),
     CommunicationModule,
+    CommunicationModule.register({ name: ANALYSER_QUEUE }),
     ScheduleModule.forRoot(),
   ],
   controllers: [KepwareController],

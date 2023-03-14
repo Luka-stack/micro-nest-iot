@@ -12,31 +12,27 @@ export const seedMachinesDB = async () => {
     ],
   });
 
-  await client.type.create({
+  const grabber = await client.type.create({
     data: {
       name: 'Grabers',
+      imageUrl: 'machine.png',
       producents: {
         connect: [
           {
             name: 'Fanuc',
           },
           {
-            name: 'Yaskawa Motoman',
-          },
-          {
             name: 'ABB',
-          },
-          {
-            name: 'Kawasaki',
           },
         ],
       },
     },
   });
 
-  await client.type.create({
+  const multi = await client.type.create({
     data: {
       name: 'Multies',
+      imageUrl: 'machine1.png',
       producents: {
         connect: [
           {
@@ -45,24 +41,19 @@ export const seedMachinesDB = async () => {
           {
             name: 'Yaskawa Motoman',
           },
-          {
-            name: 'ABB',
-          },
-          {
-            name: 'Kawasaki',
-          },
         ],
       },
     },
   });
 
-  await client.type.create({
+  const boxer = await client.type.create({
     data: {
       name: 'Boxers',
+      imageUrl: 'machine2.png',
       producents: {
         connect: [
           {
-            name: 'ABB',
+            name: 'Fanuc',
           },
           {
             name: 'Kawasaki',
@@ -72,12 +63,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const fanucXGX = await client.model.create({
     data: {
-      name: 'fanuc-oh-g-123',
+      name: 'fnc-XGX',
+      workBase: 1000,
+      workRange: 50,
+      faultRate: 0.1,
+      defaultRate: 60,
       type: {
         connect: {
-          name: 'Grabers',
+          id: grabber.id,
         },
       },
       producent: {
@@ -88,12 +83,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const fanucXGY = await client.model.create({
     data: {
-      name: 'fanuc-oh-m-123',
+      name: 'fnc-XGY',
+      workBase: 1200,
+      workRange: 200,
+      faultRate: 0.1,
+      defaultRate: 50,
       type: {
         connect: {
-          name: 'Multies',
+          id: grabber.id,
         },
       },
       producent: {
@@ -104,12 +103,96 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const fanucMMM = await client.model.create({
     data: {
-      name: 'yask-oh-g-123',
+      name: 'fnc-MMM',
+      workBase: 500,
+      workRange: 100,
+      faultRate: 0.1,
+      defaultRate: 60,
       type: {
         connect: {
-          name: 'Grabers',
+          id: multi.id,
+        },
+      },
+      producent: {
+        connect: {
+          name: 'Fanuc',
+        },
+      },
+    },
+  });
+
+  const fanucNMN = await client.model.create({
+    data: {
+      name: 'fnc-NMN',
+      workBase: 400,
+      workRange: 30,
+      faultRate: 0.1,
+      defaultRate: 30,
+      type: {
+        connect: {
+          id: multi.id,
+        },
+      },
+      producent: {
+        connect: {
+          name: 'Fanuc',
+        },
+      },
+    },
+  });
+
+  const fanucXBOX = await client.model.create({
+    data: {
+      name: 'fnc-XBOX',
+      workBase: 800,
+      workRange: 30,
+      faultRate: 0.1,
+      defaultRate: 30,
+      type: {
+        connect: {
+          id: boxer.id,
+        },
+      },
+      producent: {
+        connect: {
+          name: 'Fanuc',
+        },
+      },
+    },
+  });
+
+  const fanucYBOX = await client.model.create({
+    data: {
+      name: 'fnc-YBOX',
+      workBase: 1000,
+      workRange: 200,
+      faultRate: 0.1,
+      defaultRate: 60,
+      type: {
+        connect: {
+          id: boxer.id,
+        },
+      },
+      producent: {
+        connect: {
+          name: 'Fanuc',
+        },
+      },
+    },
+  });
+
+  const yaskawaAlle = await client.model.create({
+    data: {
+      name: 'yaska-alle',
+      workBase: 1000,
+      workRange: 50,
+      faultRate: 0.1,
+      defaultRate: 20,
+      type: {
+        connect: {
+          id: multi.id,
         },
       },
       producent: {
@@ -120,28 +203,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const abbG10 = await client.model.create({
     data: {
-      name: 'yask-oh-m-123',
+      name: 'abb-G10',
+      workBase: 800,
+      workRange: 10,
+      faultRate: 0.1,
+      defaultRate: 20,
       type: {
         connect: {
-          name: 'Multies',
-        },
-      },
-      producent: {
-        connect: {
-          name: 'Yaskawa Motoman',
-        },
-      },
-    },
-  });
-
-  await client.model.create({
-    data: {
-      name: 'abb-oh-g-123',
-      type: {
-        connect: {
-          name: 'Grabers',
+          id: grabber.id,
         },
       },
       producent: {
@@ -152,12 +223,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const abbG12 = await client.model.create({
     data: {
-      name: 'abb-oh-m-123',
+      name: 'abb-G12',
+      workBase: 1000,
+      workRange: 10,
+      faultRate: 0.1,
+      defaultRate: 20,
       type: {
         connect: {
-          name: 'Multies',
+          id: grabber.id,
         },
       },
       producent: {
@@ -168,28 +243,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const kawaSashi = await client.model.create({
     data: {
-      name: 'abb-oh-b-123',
+      name: 'kawa-sashi',
+      workBase: 800,
+      workRange: 100,
+      faultRate: 0.1,
+      defaultRate: 60,
       type: {
         connect: {
-          name: 'Boxers',
-        },
-      },
-      producent: {
-        connect: {
-          name: 'ABB',
-        },
-      },
-    },
-  });
-
-  await client.model.create({
-    data: {
-      name: 'kaw-oh-g-123',
-      type: {
-        connect: {
-          name: 'Grabers',
+          id: boxer.id,
         },
       },
       producent: {
@@ -200,28 +263,16 @@ export const seedMachinesDB = async () => {
     },
   });
 
-  await client.model.create({
+  const kawaHarro = await client.model.create({
     data: {
-      name: 'kaw-oh-m-123',
+      name: 'kawa-harro',
+      workBase: 1000,
+      workRange: 100,
+      faultRate: 0.1,
+      defaultRate: 60,
       type: {
         connect: {
-          name: 'Multies',
-        },
-      },
-      producent: {
-        connect: {
-          name: 'Kawasaki',
-        },
-      },
-    },
-  });
-
-  await client.model.create({
-    data: {
-      name: 'kaw-oh-b-123',
-      type: {
-        connect: {
-          name: 'Boxers',
+          id: boxer.id,
         },
       },
       producent: {
@@ -235,203 +286,219 @@ export const seedMachinesDB = async () => {
   await client.machine.createMany({
     data: [
       {
-        serialNumber: '4c48d884-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: '4c48d884-b055',
         producent: 'Fanuc',
-        type: 'Grabers',
-        model: 'fanuc-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: fanucXGX.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGX.id,
         version: 1,
       },
       {
-        serialNumber: 'f03af55e-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: 'f03af55e-b055',
         producent: 'Fanuc',
-        type: 'Grabers',
-        model: 'fanuc-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: fanucXGX.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGX.id,
         version: 1,
       },
       {
-        serialNumber: '4c48e068-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '4c48e068-b055',
         producent: 'Fanuc',
-        type: 'Multies',
-        model: 'fanuc-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: fanucXGX.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGX.id,
         version: 1,
       },
       {
-        serialNumber: '4c48e202-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '4c48e202-b055',
         producent: 'Fanuc',
-        type: 'Multies',
-        model: 'fanuc-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: fanucXGX.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGX.id,
         version: 1,
       },
       {
-        serialNumber: 'f03afd24-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: 'f03afd24-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucXGY.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGY.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48e360-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucXGY.defaultRate,
+        typeId: grabber.id,
+        modelId: fanucXGY.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48e4c8-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucMMM.defaultRate,
+        typeId: multi.id,
+        modelId: fanucMMM.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48e626-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucMMM.defaultRate,
+        typeId: multi.id,
+        modelId: fanucMMM.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48e77a-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucNMN.defaultRate,
+        typeId: multi.id,
+        modelId: fanucNMN.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48e8d8-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucNMN.defaultRate,
+        typeId: multi.id,
+        modelId: fanucNMN.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48ec48-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucXBOX.defaultRate,
+        typeId: boxer.id,
+        modelId: fanucXBOX.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48edc4-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucXBOX.defaultRate,
+        typeId: boxer.id,
+        modelId: fanucXBOX.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48fb66-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucYBOX.defaultRate,
+        typeId: boxer.id,
+        modelId: fanucYBOX.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48fa26-b055',
+        producent: 'Fanuc',
+        status: 'IDLE',
+        productionRate: fanucYBOX.defaultRate,
+        typeId: boxer.id,
+        modelId: fanucYBOX.id,
+        version: 1,
+      },
+      {
+        serialNumber: '4c48f8c8-b055',
         producent: 'Yaskawa Motoman',
-        type: 'Grabers',
-        model: 'yask-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: yaskawaAlle.defaultRate,
+        typeId: multi.id,
+        modelId: yaskawaAlle.id,
         version: 1,
       },
       {
-        serialNumber: '4c48e360-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: '4c48f774-b055',
         producent: 'Yaskawa Motoman',
-        type: 'Grabers',
-        model: 'fanuc-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: yaskawaAlle.defaultRate,
+        typeId: multi.id,
+        modelId: yaskawaAlle.id,
         version: 1,
       },
       {
-        serialNumber: '4c48e4c8-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
-        producent: 'Yaskawa Motoman',
-        type: 'Multies',
-        model: 'fanuc-oh-m-123',
-        status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '4c48e626-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
-        producent: 'Yaskawa Motoman',
-        type: 'Multies',
-        model: 'fanuc-oh-m-123',
-        status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '4c48e77a-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: '87e6b0b2-b055',
         producent: 'ABB',
-        type: 'Grabers',
-        model: 'abb-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: abbG10.defaultRate,
+        typeId: grabber.id,
+        modelId: abbG10.id,
         version: 1,
       },
       {
-        serialNumber: '4c48e8d8-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: '87e6b378-b055',
         producent: 'ABB',
-        type: 'Grabers',
-        model: 'abb-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: abbG10.defaultRate,
+        typeId: grabber.id,
+        modelId: abbG10.id,
         version: 1,
       },
       {
-        serialNumber: '4c48ec48-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '87e6b6e8-b055',
         producent: 'ABB',
-        type: 'Multies',
-        model: 'abb-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: abbG12.defaultRate,
+        typeId: grabber.id,
+        modelId: abbG12.id,
         version: 1,
       },
       {
-        serialNumber: '4c48edc4-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '87e6b7f6-b055',
         producent: 'ABB',
-        type: 'Multies',
-        model: 'abb-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: abbG12.defaultRate,
+        typeId: grabber.id,
+        modelId: abbG12.id,
         version: 1,
       },
       {
-        serialNumber: '4c48fb66-b055-11ed-afa1',
-        imageUrl: 'machine2.png',
-        producent: 'ABB',
-        type: 'Boxers',
-        model: 'abb-oh-b-123',
-        status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '4c48fa26-b055-11ed-afa1',
-        imageUrl: 'machine2.png',
-        producent: 'ABB',
-        type: 'Boxers',
-        model: 'abb-oh-b-123',
-        status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '4c48f8c8-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: '20beb7c2-cffa',
         producent: 'Kawasaki',
-        type: 'Grabers',
-        model: 'kaw-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: kawaSashi.defaultRate,
+        typeId: boxer.id,
+        modelId: kawaSashi.id,
         version: 1,
       },
       {
-        serialNumber: '4c48f774-b055-11ed-afa1',
-        imageUrl: 'machine.png',
+        serialNumber: 'ac829b22-2df5',
         producent: 'Kawasaki',
-        type: 'Grabers',
-        model: 'kaw-oh-g-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: kawaSashi.defaultRate,
+        typeId: boxer.id,
+        modelId: kawaSashi.id,
         version: 1,
       },
       {
-        serialNumber: '87e6b0b2-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '4d152653-1c00',
         producent: 'Kawasaki',
-        type: 'Multies',
-        model: 'kaw-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
+        productionRate: kawaHarro.defaultRate,
+        typeId: boxer.id,
+        modelId: kawaHarro.id,
         version: 1,
       },
       {
-        serialNumber: '87e6b378-b055-11ed-afa1',
-        imageUrl: 'machine1.png',
+        serialNumber: '93fc2e47-2994',
         producent: 'Kawasaki',
-        type: 'Multies',
-        model: 'kaw-oh-m-123',
         status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '87e6b6e8-b055-11ed-afa1',
-        imageUrl: 'machine3.png',
-        producent: 'Kawasaki',
-        type: 'Boxers',
-        model: 'kaw-oh-b-123',
-        status: 'IDLE',
-        productionRate: 10,
-        version: 1,
-      },
-      {
-        serialNumber: '87e6b7f6-b055-11ed-afa1',
-        imageUrl: 'machine3.png',
-        producent: 'Kawasaki',
-        type: 'Boxers',
-        model: 'kaw-oh-b-123',
-        status: 'IDLE',
-        productionRate: 10,
+        productionRate: kawaHarro.defaultRate,
+        typeId: boxer.id,
+        modelId: kawaHarro.id,
         version: 1,
       },
     ],

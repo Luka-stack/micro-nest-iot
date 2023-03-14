@@ -28,26 +28,34 @@ model Producent {
 model Type {
   id         Int         @id @default(autoincrement())
   name       String      @unique
+  imageUrl   String
   producents Producent[]
   models     Model[]
+  machines   Machine[]
 }
 
 model Model {
   id          Int       @id @default(autoincrement())
   name        String    @unique
+  workBase    Int
+  workRange   Int
+  faultRate   Float
+  defaultRate Int
   type        Type      @relation(fields: [typeId], references: [id])
   typeId      Int
   producent   Producent @relation(fields: [producentId], references: [id])
   producentId Int
+  machines    Machine[]
 }
 
 model Machine {
   id             Int       @id @default(autoincrement())
   serialNumber   String    @unique
-  imageUrl       String
   producent      String
-  type           String
-  model          String
+  type           Type      @relation(fields: [typeId], references: [id])
+  typeId         Int
+  model          Model     @relation(fields: [modelId], references: [id])
+  modelId        Int
   status         Status
   startedAt      DateTime?
   productionRate Int

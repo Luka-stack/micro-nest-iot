@@ -3,20 +3,28 @@ import {
   MachineDeletedMessage,
   MachineUpdatedMessage,
   RmqService,
-  Subjects,
+  MachineSubjects,
 } from '@iot/communication';
-import { Controller } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
-import { KepwareService } from './kepware.service';
+import { Controller, Inject } from '@nestjs/common';
+import {
+  ClientProxy,
+  Ctx,
+  EventPattern,
+  Payload,
+  RmqContext,
+} from '@nestjs/microservices';
+import { ANALYSER_QUEUE } from './constants/queues';
+import { KepwareService } from './services/kepware.service';
 
 @Controller()
 export class KepwareController {
   constructor(
     private readonly kepwareService: KepwareService,
     private readonly rmqService: RmqService,
+    @Inject(ANALYSER_QUEUE) private readonly clientProxy: ClientProxy,
   ) {}
 
-  @EventPattern(Subjects.MachineCreated)
+  @EventPattern(MachineSubjects.MachineCreated)
   async store(
     @Payload() data: MachineCreatedMessage['data'],
     @Ctx() context: RmqContext,
@@ -27,7 +35,7 @@ export class KepwareController {
     } catch {}
   }
 
-  @EventPattern(Subjects.MachineUpdated)
+  @EventPattern(MachineSubjects.MachineUpdated)
   async update(
     @Payload() data: MachineUpdatedMessage['data'],
     @Ctx() context: RmqContext,
@@ -38,7 +46,7 @@ export class KepwareController {
     } catch {}
   }
 
-  @EventPattern(Subjects.MachineDeleted)
+  @EventPattern(MachineSubjects.MachineDeleted)
   async delete(
     @Payload() data: MachineDeletedMessage['data'],
     @Ctx() context: RmqContext,
@@ -47,5 +55,13 @@ export class KepwareController {
       await this.kepwareService.delete(data);
       this.rmqService.ack(context);
     } catch {}
+  }
+
+  @EventPattern('analyser-test')
+  test(@Payload() data, @Ctx() context: RmqContext) {
+    console.log(data);
+    this.rmqService.ack(context);
+
+    this.clientProxy.emit('data', data);
   }
 }
