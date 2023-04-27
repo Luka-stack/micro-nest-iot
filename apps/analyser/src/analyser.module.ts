@@ -8,6 +8,7 @@ import { AnalyserController } from './analyser.controller';
 import { AnalyserService } from './analyser.service';
 import { MONGODB_URI } from './constants/database';
 import { Work, WorkSchema } from './schema/work.schema';
+import { Utilization, UtilizationSchema } from './schema/utilization.schema';
 
 @Module({
   imports: [
@@ -27,7 +28,10 @@ import { Work, WorkSchema } from './schema/work.schema';
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([{ name: Work.name, schema: WorkSchema }]),
+    MongooseModule.forFeature([
+      { name: Work.name, schema: WorkSchema },
+      { name: Utilization.name, schema: UtilizationSchema },
+    ]),
   ],
   controllers: [AnalyserController],
   providers: [AnalyserService],

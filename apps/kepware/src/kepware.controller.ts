@@ -56,12 +56,4 @@ export class KepwareController {
       this.rmqService.ack(context);
     } catch {}
   }
-
-  @EventPattern('analyser-test')
-  test(@Payload() data, @Ctx() context: RmqContext) {
-    console.log(data);
-    this.rmqService.ack(context);
-
-    this.clientProxy.emit('data', data);
-  }
 }

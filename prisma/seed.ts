@@ -3,9 +3,9 @@ import { seedMachinesDB } from './machines/seed';
 
 export const seed = async () => {
   await Promise.all([
-    // seedMachinesDB(),
-    // seedKepwareDB(),
+    seedMachinesDB(),
+    // seedKepwareDB()
   ]);
 };
 
-// seed();
+seed();

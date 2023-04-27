@@ -39,6 +39,7 @@ export class MachinesRepository {
           producent: machineDto.producent,
           productionRate: model.defaultRate,
           status: 'IDLE' as MachineModel['status'],
+          lastStatusUpdate: new Date(),
           version: 1,
           type: {
             connect: {
@@ -107,7 +108,7 @@ export class MachinesRepository {
 
     if (machineDto.status) {
       data.status = machineDto.status as MachineModel['status'];
-      data.startedAt = machineDto.status === 'WORKING' ? new Date() : null;
+      data.lastStatusUpdate = new Date();
     }
 
     if (machineDto.productionRate) {

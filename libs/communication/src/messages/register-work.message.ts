@@ -1,7 +1,7 @@
 import { KepwareSubjects } from './subjects';
 
-export interface DataProducedMessage {
-  message: KepwareSubjects.DataProduced;
+export interface RegisterWorkMessage {
+  message: KepwareSubjects.RegisterWork;
   data: {
     serialNumber: string;
     work: number;

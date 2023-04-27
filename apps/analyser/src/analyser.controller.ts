@@ -1,6 +1,10 @@
-import { KepwareSubjects, RmqService } from '@iot/communication';
-import { DataProducedMessage } from '@iot/communication/messages/data-produced.message';
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  KepwareSubjects,
+  RegisterUtilizationMessage,
+  RegisterWorkMessage,
+  RmqService,
+} from '@iot/communication';
+import { Controller, Get, Param } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 
 import { AnalyserService } from './analyser.service';
@@ -12,13 +16,24 @@ export class AnalyserController {
     private readonly analyserService: AnalyserService,
   ) {}
 
-  @EventPattern(KepwareSubjects.DataProduced)
-  async dataProduced(
-    @Payload() data: DataProducedMessage['data'],
+  @EventPattern(KepwareSubjects.RegisterWork)
+  async registerWork(
+    @Payload() data: RegisterWorkMessage['data'],
     @Ctx() context: RmqContext,
   ) {
     try {
-      await this.analyserService.storeProducedData(data);
+      await this.analyserService.registerWork(data);
+      this.rmqService.ack(context);
+    } catch {}
+  }
+
+  @EventPattern(KepwareSubjects.RegisterUtilization)
+  async registerUtilization(
+    @Payload() data: RegisterUtilizationMessage['data'],
+    @Ctx() context: RmqContext,
+  ) {
+    try {
+      await this.analyserService.registerUtilization(data);
       this.rmqService.ack(context);
     } catch {}
   }
@@ -26,10 +41,5 @@ export class AnalyserController {
   @Get('/:serialNumber')
   find(@Param('serialNumber') serialNumber: string) {
     return this.analyserService.findBySerialNumber(serialNumber);
-  }
-
-  @Post('/')
-  create(@Body() body: { serialNumber: string; work: number }) {
-    this.analyserService.storeProducedData(body);
   }
 }

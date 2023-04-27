@@ -66,10 +66,12 @@ export const seedMachinesDB = async () => {
   const fanucXGX = await client.model.create({
     data: {
       name: 'fnc-XGX',
-      workBase: 1000,
-      workRange: 50,
+      workBase: 10000,
+      workRange: 200,
       faultRate: 0.1,
-      defaultRate: 60,
+      minRate: 300,
+      maxRate: 180,
+      defaultRate: 300,
       type: {
         connect: {
           id: grabber.id,
@@ -86,10 +88,12 @@ export const seedMachinesDB = async () => {
   const fanucXGY = await client.model.create({
     data: {
       name: 'fnc-XGY',
-      workBase: 1200,
+      workBase: 10000,
       workRange: 200,
       faultRate: 0.1,
-      defaultRate: 50,
+      minRate: 240,
+      maxRate: 180,
+      defaultRate: 180,
       type: {
         connect: {
           id: grabber.id,
@@ -106,10 +110,12 @@ export const seedMachinesDB = async () => {
   const fanucMMM = await client.model.create({
     data: {
       name: 'fnc-MMM',
-      workBase: 500,
+      workBase: 7000,
       workRange: 100,
       faultRate: 0.1,
-      defaultRate: 60,
+      minRate: 300,
+      maxRate: 180,
+      defaultRate: 300,
       type: {
         connect: {
           id: multi.id,
@@ -126,10 +132,12 @@ export const seedMachinesDB = async () => {
   const fanucNMN = await client.model.create({
     data: {
       name: 'fnc-NMN',
-      workBase: 400,
-      workRange: 30,
+      workBase: 7000,
+      workRange: 100,
       faultRate: 0.1,
-      defaultRate: 30,
+      minRate: 240,
+      maxRate: 60,
+      defaultRate: 180,
       type: {
         connect: {
           id: multi.id,
@@ -146,10 +154,12 @@ export const seedMachinesDB = async () => {
   const fanucXBOX = await client.model.create({
     data: {
       name: 'fnc-XBOX',
-      workBase: 800,
-      workRange: 30,
+      workBase: 20000,
+      workRange: 500,
       faultRate: 0.1,
-      defaultRate: 30,
+      minRate: 300,
+      maxRate: 180,
+      defaultRate: 300,
       type: {
         connect: {
           id: boxer.id,
@@ -166,10 +176,12 @@ export const seedMachinesDB = async () => {
   const fanucYBOX = await client.model.create({
     data: {
       name: 'fnc-YBOX',
-      workBase: 1000,
-      workRange: 200,
+      workBase: 20000,
+      workRange: 500,
       faultRate: 0.1,
-      defaultRate: 60,
+      minRate: 240,
+      maxRate: 60,
+      defaultRate: 180,
       type: {
         connect: {
           id: boxer.id,
@@ -186,10 +198,12 @@ export const seedMachinesDB = async () => {
   const yaskawaAlle = await client.model.create({
     data: {
       name: 'yaska-alle',
-      workBase: 1000,
-      workRange: 50,
+      workBase: 7500,
+      workRange: 10,
       faultRate: 0.1,
-      defaultRate: 20,
+      minRate: 300,
+      maxRate: 240,
+      defaultRate: 240,
       type: {
         connect: {
           id: multi.id,
@@ -206,10 +220,12 @@ export const seedMachinesDB = async () => {
   const abbG10 = await client.model.create({
     data: {
       name: 'abb-G10',
-      workBase: 800,
-      workRange: 10,
+      workBase: 12500,
+      workRange: 100,
       faultRate: 0.1,
-      defaultRate: 20,
+      minRate: 240,
+      maxRate: 240,
+      defaultRate: 240,
       type: {
         connect: {
           id: grabber.id,
@@ -226,10 +242,12 @@ export const seedMachinesDB = async () => {
   const abbG12 = await client.model.create({
     data: {
       name: 'abb-G12',
-      workBase: 1000,
-      workRange: 10,
+      workBase: 12500,
+      workRange: 100,
       faultRate: 0.1,
-      defaultRate: 20,
+      minRate: 60,
+      maxRate: 360,
+      defaultRate: 240,
       type: {
         connect: {
           id: grabber.id,
@@ -246,10 +264,12 @@ export const seedMachinesDB = async () => {
   const kawaSashi = await client.model.create({
     data: {
       name: 'kawa-sashi',
-      workBase: 800,
-      workRange: 100,
+      workBase: 30000,
+      workRange: 1000,
       faultRate: 0.1,
-      defaultRate: 60,
+      minRate: 360,
+      maxRate: 360,
+      defaultRate: 360,
       type: {
         connect: {
           id: boxer.id,
@@ -266,10 +286,12 @@ export const seedMachinesDB = async () => {
   const kawaHarro = await client.model.create({
     data: {
       name: 'kawa-harro',
-      workBase: 1000,
-      workRange: 100,
+      workBase: 30000,
+      workRange: 1000,
       faultRate: 0.1,
-      defaultRate: 60,
+      minRate: 360,
+      maxRate: 180,
+      defaultRate: 300,
       type: {
         connect: {
           id: boxer.id,
@@ -292,6 +314,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGX.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -301,6 +324,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGX.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -310,6 +334,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGX.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -319,6 +344,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGX.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -328,6 +354,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGY.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGY.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -337,6 +364,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXGY.defaultRate,
         typeId: grabber.id,
         modelId: fanucXGY.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -346,6 +374,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucMMM.defaultRate,
         typeId: multi.id,
         modelId: fanucMMM.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -355,6 +384,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucMMM.defaultRate,
         typeId: multi.id,
         modelId: fanucMMM.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -364,6 +394,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucNMN.defaultRate,
         typeId: multi.id,
         modelId: fanucNMN.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -373,6 +404,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucNMN.defaultRate,
         typeId: multi.id,
         modelId: fanucNMN.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -382,6 +414,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXBOX.defaultRate,
         typeId: boxer.id,
         modelId: fanucXBOX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -391,6 +424,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucXBOX.defaultRate,
         typeId: boxer.id,
         modelId: fanucXBOX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -400,6 +434,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucYBOX.defaultRate,
         typeId: boxer.id,
         modelId: fanucYBOX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -409,6 +444,7 @@ export const seedMachinesDB = async () => {
         productionRate: fanucYBOX.defaultRate,
         typeId: boxer.id,
         modelId: fanucYBOX.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -418,6 +454,7 @@ export const seedMachinesDB = async () => {
         productionRate: yaskawaAlle.defaultRate,
         typeId: multi.id,
         modelId: yaskawaAlle.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -427,6 +464,7 @@ export const seedMachinesDB = async () => {
         productionRate: yaskawaAlle.defaultRate,
         typeId: multi.id,
         modelId: yaskawaAlle.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -436,6 +474,7 @@ export const seedMachinesDB = async () => {
         productionRate: abbG10.defaultRate,
         typeId: grabber.id,
         modelId: abbG10.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -445,6 +484,7 @@ export const seedMachinesDB = async () => {
         productionRate: abbG10.defaultRate,
         typeId: grabber.id,
         modelId: abbG10.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -454,6 +494,7 @@ export const seedMachinesDB = async () => {
         productionRate: abbG12.defaultRate,
         typeId: grabber.id,
         modelId: abbG12.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -463,6 +504,7 @@ export const seedMachinesDB = async () => {
         productionRate: abbG12.defaultRate,
         typeId: grabber.id,
         modelId: abbG12.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -472,6 +514,7 @@ export const seedMachinesDB = async () => {
         productionRate: kawaSashi.defaultRate,
         typeId: boxer.id,
         modelId: kawaSashi.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -481,6 +524,7 @@ export const seedMachinesDB = async () => {
         productionRate: kawaSashi.defaultRate,
         typeId: boxer.id,
         modelId: kawaSashi.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -490,6 +534,7 @@ export const seedMachinesDB = async () => {
         productionRate: kawaHarro.defaultRate,
         typeId: boxer.id,
         modelId: kawaHarro.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
       {
@@ -499,6 +544,7 @@ export const seedMachinesDB = async () => {
         productionRate: kawaHarro.defaultRate,
         typeId: boxer.id,
         modelId: kawaHarro.id,
+        lastStatusUpdate: new Date(),
         version: 1,
       },
     ],

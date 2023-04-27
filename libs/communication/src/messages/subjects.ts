@@ -5,6 +5,7 @@ export enum MachineSubjects {
 }
 
 export enum KepwareSubjects {
-  DataProduced = 'data:produced',
-  MachineStatusChanged = 'machine_status:changed',
+  RegisterWork = 'register:work',
+  RegisterUtilization = 'register:utilization',
+  RegisterStatusChange = 'register:status_change',
 }

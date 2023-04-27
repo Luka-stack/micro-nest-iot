@@ -23,7 +23,7 @@ export class MachineDto implements MachineModel {
 
   status: Status;
 
-  startedAt: Date;
+  lastStatusUpdate: Date;
 
   productionRate: number;
 

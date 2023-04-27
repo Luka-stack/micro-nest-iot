@@ -1,6 +1,8 @@
-import { KepwareSubjects } from '@iot/communication';
-import { DataProducedMessage } from '@iot/communication/messages/data-produced.message';
-import { MachineStatusChangedMessage } from '@iot/communication/messages/machine-status-changed.message';
+import {
+  KepwareSubjects,
+  RegisterUtilizationMessage,
+  RegisterWorkMessage,
+} from '@iot/communication';
 import { Inject, Injectable } from '@nestjs/common/decorators';
 import { ClientProxy } from '@nestjs/microservices';
 import { ANALYSER_QUEUE } from '../constants/queues';
@@ -11,11 +13,11 @@ export class AnalyserService {
     @Inject(ANALYSER_QUEUE) private readonly clientProxy: ClientProxy,
   ) {}
 
-  emitProducedData(data: DataProducedMessage['data']): void {
-    this.clientProxy.emit(KepwareSubjects.DataProduced, data);
+  emitMachineWork(data: RegisterWorkMessage['data']): void {
+    this.clientProxy.emit(KepwareSubjects.RegisterWork, data);
   }
 
-  emitStatusChange(data: MachineStatusChangedMessage['data']): void {
-    this.clientProxy.emit(KepwareSubjects.MachineStatusChanged, data);
+  emitMachineUtilization(data: RegisterUtilizationMessage['data']): void {
+    this.clientProxy.emit(KepwareSubjects.RegisterUtilization, data);
   }
 }

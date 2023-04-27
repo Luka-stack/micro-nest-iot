@@ -17,6 +17,12 @@ export class MachineModelDto implements MachineModel {
   faultRate: number;
 
   @Expose({ groups: ['machine'] })
+  minRate: number;
+
+  @Expose({ groups: ['machine'] })
+  maxRate: number;
+
+  @Expose({ groups: ['machine'] })
   defaultRate: number;
 
   @Transform(({ value }) => value.name)

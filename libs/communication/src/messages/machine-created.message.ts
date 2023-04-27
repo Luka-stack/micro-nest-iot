@@ -5,11 +5,13 @@ export interface MachineCreatedMessage {
   data: {
     serialNumber: string;
     status: string;
-    productionRate: number;
     workBase: number;
     workRange: number;
     faultRate: number;
+    minRate: number;
+    maxRate: number;
     defaultRate: number;
+    productionRate: number;
     version: number;
   };
 }

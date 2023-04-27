@@ -30,6 +30,8 @@ export class MachinesService {
         workRange: machine.model.workRange,
         faultRate: machine.model.faultRate,
         defaultRate: machine.model.defaultRate,
+        minRate: machine.model.minRate,
+        maxRate: machine.model.maxRate,
       });
 
       return { data: plainToInstance(MachineDto, machine) };

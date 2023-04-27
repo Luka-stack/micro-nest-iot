@@ -3,9 +3,10 @@ import { Machine } from '@prisma/db-kepware';
 import { AnalyserService } from '../services/analyser.service';
 
 export class WorkingMachine {
+  private static WORK_INTERVAL_SUFIX = 'work';
+  private static UTILIZATON_INTERVAL_SUFIX = 'util';
+
   private base: number;
-  private range: number;
-  private decreaseFactor = 0.999;
 
   constructor(
     private readonly machine: Machine,
@@ -13,12 +14,18 @@ export class WorkingMachine {
     private readonly analyserService: AnalyserService,
   ) {
     this.base = machine.workBase;
-    this.range = machine.workRange;
   }
 
   updateSimulation(productionRate: number): void {
-    if (this.scheduler.doesExist('interval', this.machine.serialNumber)) {
-      this.scheduler.deleteInterval(this.machine.serialNumber);
+    if (
+      this.scheduler.doesExist(
+        'interval',
+        `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,
+      )
+    ) {
+      this.scheduler.deleteInterval(
+        `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,
+      );
     }
 
     this.machine.productionRate = productionRate;
@@ -26,49 +33,74 @@ export class WorkingMachine {
   }
 
   startSimulation(): void {
-    this.analyserService.emitStatusChange({
-      serialNumber: this.machine.serialNumber,
-      status: 'WORKING',
-    });
-
-    const interval = setInterval(() => {
-      const [work, newBase] = WorkingMachine.simulateOrbiting(
+    const workInterval = setInterval(() => {
+      const [work, newBase] = WorkingMachine.simulateMachineWork(
         this.base,
-        this.range,
-        this.decreaseFactor,
+        this.machine.workRange,
+        this.machine.defaultRate,
+        this.machine.productionRate,
       );
 
       this.base = newBase;
-      this.analyserService.emitProducedData({
+      this.analyserService.emitMachineWork({
         serialNumber: this.machine.serialNumber,
         work,
       });
     }, this.machine.productionRate * 1000);
 
-    this.scheduler.addInterval(this.machine.serialNumber, interval);
+    const utilizationInterval = setInterval(() => {
+      this.analyserService.emitMachineUtilization({
+        serialNumber: this.machine.serialNumber,
+        utilization: 60,
+      });
+    });
+
+    this.scheduler.addInterval(
+      `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,
+      workInterval,
+    );
+    this.scheduler.addInterval(
+      `${this.machine.serialNumber}-${WorkingMachine.UTILIZATON_INTERVAL_SUFIX}`,
+      utilizationInterval,
+    );
   }
 
   stopSimulation(): void {
-    if (this.scheduler.doesExist('interval', this.machine.serialNumber)) {
-      this.scheduler.deleteInterval(this.machine.serialNumber);
+    if (
+      this.scheduler.doesExist(
+        'interval',
+        `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,
+      )
+    ) {
+      this.scheduler.deleteInterval(
+        `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,
+      );
+    }
 
-      this.analyserService.emitStatusChange({
-        serialNumber: this.machine.serialNumber,
-        status: 'IDLE',
-      });
+    if (
+      this.scheduler.doesExist(
+        'interval',
+        `${this.machine.serialNumber}-${WorkingMachine.UTILIZATON_INTERVAL_SUFIX}`,
+      )
+    ) {
+      this.scheduler.deleteInterval(
+        `${this.machine.serialNumber}-${WorkingMachine.UTILIZATON_INTERVAL_SUFIX}`,
+      );
     }
   }
 
-  private static simulateOrbiting(
+  private static simulateMachineWork(
     base: number,
     range: number,
-    decreaseFactor: number,
+    defaultRate: number,
+    rate: number,
   ): [number, number] {
-    const randomNumber =
-      Math.random() * (base + range - (base - range)) + (base - range);
+    const timeElapsed = 10;
+    const decay = defaultRate - rate > 0 ? (defaultRate - rate) / 4 : 0;
 
-    base *= decreaseFactor;
+    const degradedBase = base - decay * timeElapsed;
+    const work = degradedBase - range + 2 * range * Math.random();
 
-    return [randomNumber, base];
+    return [work, degradedBase];
   }
 }

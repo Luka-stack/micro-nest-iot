@@ -41,6 +41,8 @@ model Model {
   workRange   Int
   faultRate   Float
   defaultRate Int
+  maxRate     Int
+  minRate     Int
   type        Type      @relation(fields: [typeId], references: [id])
   typeId      Int
   producent   Producent @relation(fields: [producentId], references: [id])
@@ -49,15 +51,15 @@ model Model {
 }
 
 model Machine {
-  id             Int       @id @default(autoincrement())
-  serialNumber   String    @unique
-  producent      String
-  type           Type      @relation(fields: [typeId], references: [id])
-  typeId         Int
-  model          Model     @relation(fields: [modelId], references: [id])
-  modelId        Int
-  status         Status
-  startedAt      DateTime?
-  productionRate Int
-  version        Int
+  id               Int      @id @default(autoincrement())
+  serialNumber     String   @unique
+  producent        String
+  type             Type     @relation(fields: [typeId], references: [id])
+  typeId           Int
+  model            Model    @relation(fields: [modelId], references: [id])
+  modelId          Int
+  status           Status
+  lastStatusUpdate DateTime
+  productionRate   Int
+  version          Int
 }
