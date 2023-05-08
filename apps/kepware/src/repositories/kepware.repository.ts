@@ -7,7 +7,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/db-kepware';
+import { Prisma, Machine } from '@prisma/db-kepware';
 
 import { PrismaService } from './prisma.service';
 
@@ -58,8 +58,12 @@ export class KepwareRepository {
     }
   }
 
-  async findMany() {
-    return this.prisma.machine.findMany();
+  async findWorking(): Promise<Machine[]> {
+    return this.prisma.machine.findMany({
+      where: {
+        status: 'WORKING',
+      },
+    });
   }
 
   async delete(serialNumber: string): Promise<void> {

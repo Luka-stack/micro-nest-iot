@@ -53,7 +53,7 @@ export class WorkingMachine {
         serialNumber: this.machine.serialNumber,
         utilization: 60,
       });
-    });
+    }, 60 * 1000);
 
     this.scheduler.addInterval(
       `${this.machine.serialNumber}-${WorkingMachine.WORK_INTERVAL_SUFIX}`,

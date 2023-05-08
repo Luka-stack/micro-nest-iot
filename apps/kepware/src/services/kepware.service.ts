@@ -79,7 +79,7 @@ export class KepwareService {
 
   @Timeout(10000)
   async bootstrapMachines(): Promise<void> {
-    const machines = await this.kepwareRepository.findMany();
+    const machines = await this.kepwareRepository.findWorking();
 
     machines.forEach((machine) => {
       const workingMachine = this.createMachine(machine);
@@ -87,6 +87,9 @@ export class KepwareService {
       this.workingMachines.set(machine.serialNumber, workingMachine);
     });
 
+    this.logger.log(
+      `Number of machines that started working ${machines.length}`,
+    );
     this.logger.log('Finished bootstrapping machines');
   }
 

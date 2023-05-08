@@ -9,6 +9,7 @@ import { KepwareController } from './kepware.controller';
 import { KepwareService } from './services/kepware.service';
 import { KepwareRepository } from './repositories/kepware.repository';
 import { PrismaService } from './repositories/prisma.service';
+import { AnalyserService } from './services/analyser.service';
 
 @Module({
   imports: [
@@ -25,6 +26,11 @@ import { PrismaService } from './repositories/prisma.service';
     ScheduleModule.forRoot(),
   ],
   controllers: [KepwareController],
-  providers: [KepwareService, PrismaService, KepwareRepository],
+  providers: [
+    KepwareService,
+    PrismaService,
+    AnalyserService,
+    KepwareRepository,
+  ],
 })
 export class KepwareModule {}

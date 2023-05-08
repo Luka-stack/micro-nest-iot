@@ -4,12 +4,13 @@ import {
   RegisterWorkMessage,
   RmqService,
 } from '@iot/communication';
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 
 import { AnalyserService } from './analyser.service';
+import { QueryUtilizationDto } from './dto/query-utilization.dto';
 
-@Controller('/test')
+@Controller('/analyser')
 export class AnalyserController {
   constructor(
     private readonly rmqService: RmqService,
@@ -38,8 +39,16 @@ export class AnalyserController {
     } catch {}
   }
 
-  @Get('/:serialNumber')
-  find(@Param('serialNumber') serialNumber: string) {
-    return this.analyserService.findBySerialNumber(serialNumber);
+  @Get('/:serialNumber/utilization')
+  getUtilization(
+    @Param('serialNumber') serialNumber: string,
+    @Query() queryUtilization: QueryUtilizationDto,
+  ) {
+    return this.analyserService.getUtilization(serialNumber, queryUtilization);
+  }
+
+  @Get('/:serialNumber/statistics')
+  getStatistics(@Param('serialNumber') serialNumber: string) {
+    return this.analyserService.getStatistics(serialNumber);
   }
 }

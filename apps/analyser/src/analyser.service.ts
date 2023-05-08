@@ -8,6 +8,8 @@ import {
   RegisterWorkMessage,
 } from '@iot/communication';
 import { Utilization, UtilizationDocument } from './schema/utilization.schema';
+import { QueryUtilizationDto } from './dto/query-utilization.dto';
+import { StatisticsDto } from './dto/statistics-dto';
 
 @Injectable()
 export class AnalyserService {
@@ -53,9 +55,183 @@ export class AnalyserService {
     }
   }
 
-  async findBySerialNumber(serialNumber: string) {
-    return this.workModel.find({
-      serialNumber,
-    });
+  async getUtilization(serialNumber: string, query: QueryUtilizationDto) {
+    return {
+      data: await this.utilizationModel.aggregate([
+        {
+          $match: {
+            serialNumber,
+            timestamp: {
+              $gte: new Date(query.fromDate),
+              $lte: new Date(query.toDate),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
+            },
+            utilization: {
+              $sum: '$utilization',
+            },
+          },
+        },
+        {
+          $addFields: {
+            utilization: {
+              $divide: ['$utilization', 60],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            date: '$_id',
+            utilization: 1,
+          },
+        },
+        {
+          $sort: { date: 1 },
+        },
+      ]),
+    };
+  }
+
+  async getStatistics(serialNumber: string): Promise<StatisticsDto> {
+    const todayDate = new Date();
+    todayDate.setUTCHours(0, 0, 0, 0);
+
+    const [wholeData, statistics] = await Promise.all([
+      this.utilizationModel.aggregate([
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
+            },
+            utilization: { $sum: '$utilization' },
+          },
+        },
+      ]),
+      this.utilizationModel.aggregate([
+        {
+          $match: {
+            serialNumber,
+            timestamp: {
+              $gte: new Date(
+                todayDate.getTime() - 4 * 31 * 24 * 60 * 60 * 1000,
+              ),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
+            },
+            utilization: { $sum: '$utilization' },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            today: {
+              $sum: {
+                $cond: [
+                  {
+                    $eq: [{ $toDate: '$_id' }, { $toDate: todayDate }],
+                  },
+                  '$utilization',
+                  0,
+                ],
+              },
+            },
+            firstSevenDays: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      {
+                        $gte: [
+                          { $toDate: '$_id' },
+                          { $subtract: [todayDate, 6 * 24 * 60 * 60 * 1000] },
+                        ],
+                      },
+                      {
+                        $lte: [{ $toDate: '$_id' }, todayDate],
+                      },
+                    ],
+                  },
+                  '$utilization',
+                  0,
+                ],
+              },
+            },
+            firstMonth: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      {
+                        $gte: [
+                          { $toDate: '$_id' },
+                          { $subtract: [todayDate, 30 * 24 * 60 * 60 * 1000] },
+                        ],
+                      },
+                      {
+                        $lte: [{ $toDate: '$_id' }, todayDate],
+                      },
+                    ],
+                  },
+                  '$utilization',
+                  0,
+                ],
+              },
+            },
+            quater: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      {
+                        $gte: [
+                          { $toDate: '$_id' },
+                          {
+                            $subtract: [
+                              todayDate,
+                              4 * 30 * 24 * 60 * 60 * 1000,
+                            ],
+                          },
+                        ],
+                      },
+                      {
+                        $lte: [{ $toDate: '$_id' }, todayDate],
+                      },
+                    ],
+                  },
+                  '$utilization',
+                  0,
+                ],
+              },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    const totalUtilization = wholeData.reduce(
+      (acc, curr) => acc + curr.utilization,
+      0,
+    );
+
+    return {
+      data: {
+        average: totalUtilization / wholeData.length,
+        today: statistics[0].today,
+        firstSevenDays: statistics[0].firstSevenDays,
+        firstMonth: statistics[0].firstMonth,
+        quater: statistics[0].quater,
+      },
+    };
   }
 }
