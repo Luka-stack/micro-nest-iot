@@ -11,6 +11,7 @@ async function bootstrap() {
 
   app.connectMicroservice(rmqService.getOptions(ANALYSER_QUEUE));
 
+  app.enableCors();
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix('api');
 

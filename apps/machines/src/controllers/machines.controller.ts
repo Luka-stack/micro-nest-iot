@@ -16,6 +16,7 @@ import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { MachinesService } from '../services/machines.service';
+import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 
 @Controller('/machines')
 export class MachinesController {
@@ -33,6 +34,13 @@ export class MachinesController {
     return this.machinesService.findOne(serialNumber);
   }
 
+  @Get('/:serialNumber/status')
+  findMachineStatus(
+    @Param('serialNumber') serialNumber: string,
+  ): Promise<ResponseMachineStatusDto> {
+    return this.machinesService.findMachineStatus(serialNumber);
+  }
+
   @Get()
   async findMany(
     @Query() queryMachineDto: QueryMachineDto,
@@ -45,6 +53,8 @@ export class MachinesController {
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
   ): Promise<ResponseMachineDto> {
+    console.log(updateMachineDto);
+
     return this.machinesService.update(serialNumber, updateMachineDto);
   }
 

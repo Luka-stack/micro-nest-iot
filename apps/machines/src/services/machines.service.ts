@@ -9,6 +9,7 @@ import { plainToInstance } from 'class-transformer';
 import { MachineDto } from '../dto/machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
+import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 
 @Injectable()
 export class MachinesService {
@@ -48,6 +49,18 @@ export class MachinesService {
       );
 
       return { data };
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async findMachineStatus(
+    serialNumber: string,
+  ): Promise<ResponseMachineStatusDto> {
+    try {
+      const data = await this.machinesRepository.findOne(serialNumber);
+
+      return { data: { status: data.status } };
     } catch (err) {
       throw err;
     }

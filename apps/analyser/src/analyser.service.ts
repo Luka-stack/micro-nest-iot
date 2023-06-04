@@ -56,45 +56,47 @@ export class AnalyserService {
   }
 
   async getUtilization(serialNumber: string, query: QueryUtilizationDto) {
+    const databaseData = await this.utilizationModel.aggregate([
+      {
+        $match: {
+          serialNumber,
+          timestamp: {
+            $gte: new Date(query.fromDate),
+            $lte: new Date(query.toDate),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
+          },
+          utilization: {
+            $sum: '$utilization',
+          },
+        },
+      },
+      {
+        $addFields: {
+          utilization: {
+            $divide: ['$utilization', 60],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          date: '$_id',
+          utilization: 1,
+        },
+      },
+      {
+        $sort: { date: 1 },
+      },
+    ]);
+
     return {
-      data: await this.utilizationModel.aggregate([
-        {
-          $match: {
-            serialNumber,
-            timestamp: {
-              $gte: new Date(query.fromDate),
-              $lte: new Date(query.toDate),
-            },
-          },
-        },
-        {
-          $group: {
-            _id: {
-              $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
-            },
-            utilization: {
-              $sum: '$utilization',
-            },
-          },
-        },
-        {
-          $addFields: {
-            utilization: {
-              $divide: ['$utilization', 60],
-            },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            date: '$_id',
-            utilization: 1,
-          },
-        },
-        {
-          $sort: { date: 1 },
-        },
-      ]),
+      data: this.fillMissingDates(databaseData, query.fromDate, query.toDate),
     };
   }
 
@@ -105,11 +107,23 @@ export class AnalyserService {
     const [wholeData, statistics] = await Promise.all([
       this.utilizationModel.aggregate([
         {
+          $match: {
+            serialNumber,
+          },
+        },
+        {
           $group: {
             _id: {
               $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
             },
             utilization: { $sum: '$utilization' },
+          },
+        },
+        {
+          $addFields: {
+            utilization: {
+              $divide: ['$utilization', 60],
+            },
           },
         },
       ]),
@@ -118,9 +132,7 @@ export class AnalyserService {
           $match: {
             serialNumber,
             timestamp: {
-              $gte: new Date(
-                todayDate.getTime() - 4 * 31 * 24 * 60 * 60 * 1000,
-              ),
+              $gte: new Date(todayDate.getTime() - 31 * 24 * 60 * 60 * 1000),
             },
           },
         },
@@ -130,6 +142,13 @@ export class AnalyserService {
               $dateToString: { format: '%Y-%m-%d', date: '$timestamp' },
             },
             utilization: { $sum: '$utilization' },
+          },
+        },
+        {
+          $addFields: {
+            utilization: {
+              $divide: ['$utilization', 60],
+            },
           },
         },
         {
@@ -146,7 +165,7 @@ export class AnalyserService {
                 ],
               },
             },
-            firstSevenDays: {
+            lastWeek: {
               $sum: {
                 $cond: [
                   {
@@ -167,7 +186,7 @@ export class AnalyserService {
                 ],
               },
             },
-            firstMonth: {
+            lastMonth: {
               $sum: {
                 $cond: [
                   {
@@ -188,50 +207,68 @@ export class AnalyserService {
                 ],
               },
             },
-            quater: {
-              $sum: {
-                $cond: [
-                  {
-                    $and: [
-                      {
-                        $gte: [
-                          { $toDate: '$_id' },
-                          {
-                            $subtract: [
-                              todayDate,
-                              4 * 30 * 24 * 60 * 60 * 1000,
-                            ],
-                          },
-                        ],
-                      },
-                      {
-                        $lte: [{ $toDate: '$_id' }, todayDate],
-                      },
-                    ],
-                  },
-                  '$utilization',
-                  0,
-                ],
-              },
-            },
           },
         },
       ]),
     ]);
 
-    const totalUtilization = wholeData.reduce(
-      (acc, curr) => acc + curr.utilization,
-      0,
-    );
+    if (!wholeData.length) {
+      return {
+        data: {
+          total: 0,
+          today: 0,
+          lastWeek: 0,
+          avgLastWeek: 0,
+          lastMonth: 0,
+          avgLastMonth: 0,
+        },
+      };
+    }
 
     return {
       data: {
-        average: totalUtilization / wholeData.length,
+        total: wholeData.reduce((acc, curr) => curr.utilization, 0),
         today: statistics[0].today,
-        firstSevenDays: statistics[0].firstSevenDays,
-        firstMonth: statistics[0].firstMonth,
-        quater: statistics[0].quater,
+        lastWeek: statistics[0].lastWeek,
+        avgLastWeek: statistics[0].lastWeek / 7,
+        lastMonth: statistics[0].lastMonth,
+        avgLastMonth: Math.floor(statistics[0].lastMonth / 31),
       },
     };
+  }
+
+  private fillMissingDates(
+    data: { date: string }[],
+    startDateString: string,
+    endDateString: string,
+  ) {
+    const filledData = [];
+    const currentDate = new Date(startDateString);
+    const endDate = new Date(endDateString);
+
+    while (currentDate <= endDate) {
+      let found = false;
+
+      for (const obj of data) {
+        const objDate = new Date(obj.date);
+
+        if (objDate.getTime() === currentDate.getTime()) {
+          filledData.push(obj);
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        filledData.push({
+          date: currentDate.toISOString().slice(0, 10),
+          utilization: 0,
+        });
+      }
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return filledData;
   }
 }

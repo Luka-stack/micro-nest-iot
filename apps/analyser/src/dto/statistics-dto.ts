@@ -1,9 +1,10 @@
 export class StatisticsDto {
   data: {
-    average: number;
+    total: number;
     today: number;
-    firstSevenDays: number;
-    firstMonth: number;
-    quater: number;
+    lastWeek: number;
+    avgLastWeek: number;
+    lastMonth: number;
+    avgLastMonth: number;
   };
 }
