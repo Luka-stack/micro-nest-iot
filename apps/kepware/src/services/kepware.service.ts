@@ -58,6 +58,7 @@ export class KepwareService {
         return;
       }
     } catch (err) {
+      console.log(err);
       this.logger.error("Couldn't update machine");
     }
   }

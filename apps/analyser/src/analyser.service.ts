@@ -56,13 +56,16 @@ export class AnalyserService {
   }
 
   async getUtilization(serialNumber: string, query: QueryUtilizationDto) {
+    const tillThatDay = new Date(query.toDate);
+    tillThatDay.setDate(tillThatDay.getDate() + 1);
+
     const databaseData = await this.utilizationModel.aggregate([
       {
         $match: {
           serialNumber,
           timestamp: {
             $gte: new Date(query.fromDate),
-            $lte: new Date(query.toDate),
+            $lt: tillThatDay,
           },
         },
       },
