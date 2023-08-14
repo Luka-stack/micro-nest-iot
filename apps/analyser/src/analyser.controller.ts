@@ -51,4 +51,9 @@ export class AnalyserController {
   getStatistics(@Param('serialNumber') serialNumber: string) {
     return this.analyserService.getStatistics(serialNumber);
   }
+
+  @Get('/:serialNumber/work')
+  getWork(@Param('serialNumber') serialNumber: string) {
+    return this.analyserService.getWork(serialNumber);
+  }
 }

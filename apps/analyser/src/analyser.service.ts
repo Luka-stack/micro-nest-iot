@@ -103,6 +103,13 @@ export class AnalyserService {
     };
   }
 
+  async getWork(serialNumber: string) {
+    const data = await this.workModel.find({ serialNumber });
+    const machinesDTO = data.map((machine) => machine.toObject());
+
+    return machinesDTO;
+  }
+
   async getStatistics(serialNumber: string): Promise<StatisticsDto> {
     const todayDate = new Date();
     todayDate.setUTCHours(0, 0, 0, 0);

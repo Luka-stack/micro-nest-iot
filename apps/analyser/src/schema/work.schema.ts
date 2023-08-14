@@ -7,6 +7,13 @@ import { Document } from 'mongoose';
     metaField: 'serialNumber',
     granularity: 'minutes',
   },
+  toObject: {
+    transform: (doc, ret) => {
+      delete ret._id;
+      delete ret.__v;
+      delete ret.serialNumber;
+    },
+  },
 })
 export class Work {
   @Prop({ required: true })
