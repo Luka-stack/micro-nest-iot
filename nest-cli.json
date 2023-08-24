@@ -5,7 +5,8 @@
   "monorepo": true,
   "root": "apps/machines",
   "compilerOptions": {
-    "webpack": true,
+    "webpack": false,
+    "builder": "webpack",
     "tsConfigPath": "apps/machines/tsconfig.app.json"
   },
   "projects": {
