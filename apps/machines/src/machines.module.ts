@@ -11,6 +11,7 @@ import { MiscRepository } from './repositories/misc.repository';
 import { KEPWARE_QUEUE } from './constants/queues';
 import { KepwareService } from './services/kepware.service';
 import { MiscController } from './controllers/misc.controller';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { MiscController } from './controllers/misc.controller';
       envFilePath: './apps/machines/.env',
     }),
     CommunicationModule.register({ name: KEPWARE_QUEUE }),
+    DatabaseModule,
   ],
   controllers: [MachinesController, MiscController],
   providers: [

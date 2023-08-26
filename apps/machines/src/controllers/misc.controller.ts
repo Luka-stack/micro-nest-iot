@@ -11,4 +11,9 @@ export class MiscController {
   getAllFilters(): Promise<ResponseFiltersDto> {
     return this.miscService.getAllFilters();
   }
+
+  @Get('/drizzle/filters')
+  drizzle() {
+    return this.miscService.drizzle();
+  }
 }

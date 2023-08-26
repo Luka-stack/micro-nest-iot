@@ -24,7 +24,9 @@
     "prisma:migrate:machines": "prisma migrate dev --schema prisma/machines/schema.prisma",
     "prisma:migrate:kepware": "prisma migrate dev --schema prisma/kepware/schema.prisma",
     "prisma:generate:machines": "prisma generate --schema prisma/machines/schema.prisma",
-    "prisma:generate:kepware": "prisma generate --schema prisma/kepware/schema.prisma"
+    "prisma:generate:kepware": "prisma generate --schema prisma/kepware/schema.prisma",
+    "gen:pg:machines": "drizzle-kit generate:pg --config=./apps/machines/drizzle.config.ts",
+    "seed:pg:machines": "tsx ./apps/machines/src/database/seeds/initial-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.2.1",
@@ -40,8 +42,11 @@
     "amqplib": "^0.10.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "dotenv": "^16.3.1",
+    "drizzle-orm": "^0.28.5",
     "joi": "^17.9.2",
     "mongoose": "^7.4.4",
+    "postgres": "^3.3.5",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^5.0.1",
     "rxjs": "^7.8.1"
@@ -60,6 +65,7 @@
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
     "dotenv-cli": "^7.3.0",
+    "drizzle-kit": "^0.19.13",
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
@@ -73,6 +79,7 @@
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "4.2.0",
+    "tsx": "^3.12.7",
     "typescript": "^5.2.2"
   },
   "prisma": {

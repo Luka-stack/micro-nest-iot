@@ -67,9 +67,8 @@ export class MachinesService {
   }
 
   async findMany(queryDto: QueryMachineDto): Promise<ResponseMachinesDto> {
-    const { machines, total } = await this.machinesRepository.paginate(
-      queryDto,
-    );
+    const { machines, total } =
+      await this.machinesRepository.paginate(queryDto);
 
     const data = plainToInstance(MachineDto, machines);
 
