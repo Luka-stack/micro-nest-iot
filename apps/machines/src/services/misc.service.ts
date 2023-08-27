@@ -10,13 +10,13 @@ import { MiscRepository } from '../repositories/misc.repository';
 
 @Injectable()
 export class MiscService {
-  constructor(private readonly miscRepository: MiscRepository) {}
+  constructor(private readonly drizzleRepository: MiscRepository) {}
 
   async getAllFilters(): Promise<ResponseFiltersDto> {
     const [producents, types, models] = await Promise.all([
-      this.miscRepository.findProducents(),
-      this.miscRepository.findTypesIncludeProducent(),
-      this.miscRepository.findModelsIncludeRelations(),
+      this.drizzleRepository.findProducents(),
+      this.drizzleRepository.findTypes(),
+      this.drizzleRepository.findModels(),
     ]);
 
     return {

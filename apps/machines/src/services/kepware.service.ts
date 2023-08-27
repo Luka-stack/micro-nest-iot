@@ -1,12 +1,13 @@
+import { ClientProxy } from '@nestjs/microservices';
+import { MachineSubjects } from '@iot/communication';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   MachineCreatedMessage,
   MachineDeletedMessage,
   MachineUpdatedMessage,
 } from '@iot/communication';
-import { MachineSubjects } from '@iot/communication';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { KEPWARE_QUEUE } from '../constants/queues';
+
+import { KEPWARE_QUEUE } from '../constants';
 
 @Injectable()
 export class KepwareService {

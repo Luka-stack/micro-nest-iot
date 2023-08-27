@@ -1,31 +1,15 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  Param,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 
-import { CreateMachineDto } from '../dto/incoming/create-machine.dto';
+import { MachinesService } from '../services/machines.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
-import { MachinesService } from '../services/machines.service';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 
 @Controller('/machines')
 export class MachinesController {
   constructor(private readonly machinesService: MachinesService) {}
-
-  @Post()
-  store(@Body() request: CreateMachineDto): Promise<ResponseMachineDto> {
-    return this.machinesService.store(request);
-  }
 
   @Get('/:serialNumber')
   findOne(
@@ -53,14 +37,6 @@ export class MachinesController {
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
   ): Promise<ResponseMachineDto> {
-    console.log(updateMachineDto);
-
     return this.machinesService.update(serialNumber, updateMachineDto);
-  }
-
-  @Delete('/:serialNumber')
-  @HttpCode(204)
-  destroy(@Param('serialNumber') serialNumber: string) {
-    return this.machinesService.destroy(serialNumber);
   }
 }

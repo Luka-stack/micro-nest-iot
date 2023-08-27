@@ -1,0 +1,300 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "id": "f042229c-288f-4e32-9912-4be2a591efda",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "machines": {
+      "name": "machines",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "serial_number": {
+          "name": "serial_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'IDLE'"
+        },
+        "last_status_update": {
+          "name": "last_status_update",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "production_rate": {
+          "name": "production_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "producent": {
+          "name": "producent",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "serial_number_idx": {
+          "name": "serial_number_idx",
+          "columns": [
+            "serial_number"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "models": {
+      "name": "models",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "work_base": {
+          "name": "work_base",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "work_range": {
+          "name": "work_range",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fault_rate": {
+          "name": "fault_rate",
+          "type": "double precision",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "default_rate": {
+          "name": "default_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_rate": {
+          "name": "max_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "min_rate": {
+          "name": "min_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type_id": {
+          "name": "type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "producent_id": {
+          "name": "producent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "model_name_idx": {
+          "name": "model_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "producents": {
+      "name": "producents",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "producents_name_idx": {
+          "name": "producents_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "producents_to_types": {
+      "name": "producents_to_types",
+      "schema": "",
+      "columns": {
+        "producent_id": {
+          "name": "producent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type_id": {
+          "name": "type_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "producents_to_types_producent_id_producents_id_fk": {
+          "name": "producents_to_types_producent_id_producents_id_fk",
+          "tableFrom": "producents_to_types",
+          "tableTo": "producents",
+          "columnsFrom": [
+            "producent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "producents_to_types_type_id_types_id_fk": {
+          "name": "producents_to_types_type_id_types_id_fk",
+          "tableFrom": "producents_to_types",
+          "tableTo": "types",
+          "columnsFrom": [
+            "type_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "producents_to_types_producent_id_type_id": {
+          "name": "producents_to_types_producent_id_type_id",
+          "columns": [
+            "producent_id",
+            "type_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "types": {
+      "name": "types",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "types_name_idx": {
+          "name": "types_name_idx",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {
+    "status": {
+      "name": "status",
+      "values": {
+        "IDLE": "IDLE",
+        "WORKING": "WORKING",
+        "MAINTENANCE": "MAINTENANCE",
+        "BROKEN": "BROKEN"
+      }
+    }
+  },
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

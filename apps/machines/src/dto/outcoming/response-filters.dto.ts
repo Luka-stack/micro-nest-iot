@@ -1,6 +1,6 @@
 import { MachineModelDto } from '../machine-model.dto';
-import { MachineProducentDto } from '../machine-producent.dto';
 import { MachineTypeDto } from '../machine-type.dto';
+import { MachineProducentDto } from '../machine-producent.dto';
 
 export interface ResponseFiltersDto {
   data: {

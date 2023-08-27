@@ -28,6 +28,15 @@
         "tsConfigPath": "libs/communication/tsconfig.lib.json"
       }
     },
+    "database": {
+      "type": "library",
+      "root": "libs/database",
+      "entryFile": "index",
+      "sourceRoot": "libs/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database/tsconfig.lib.json"
+      }
+    },
     "machines": {
       "type": "application",
       "root": "apps/machines",

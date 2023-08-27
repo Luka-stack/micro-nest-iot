@@ -1,254 +1,152 @@
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/db-machines';
-import { Machine as MachineModel } from '@prisma/db-machines';
+  SQLWrapper,
+  and,
+  eq,
+  gt,
+  gte,
+  inArray,
+  like,
+  lt,
+  lte,
+} from 'drizzle-orm';
 
-import { PrismaService } from './prisma.service';
-import { CreateMachineDto } from '../dto/incoming/create-machine.dto';
+import * as schema from '../database/schema';
+import { PG_CONNECTION } from '../constants';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
 
 @Injectable()
 export class MachinesRepository {
   private readonly defaultLimit = 10;
-  private totalCount = 0;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PG_CONNECTION)
+    private readonly conn: PostgresJsDatabase<typeof schema>,
+  ) {}
 
-  async getTotalCount(): Promise<number> {
-    if (this.totalCount === 0) {
-      this.totalCount = await this.prisma.machine.count();
-    }
-
-    return this.totalCount;
-  }
-
-  async create(machineDto: CreateMachineDto) {
-    try {
-      const model = await this.prisma.model.findUniqueOrThrow({
-        where: { name: machineDto.model },
-      });
-
-      const machine = await this.prisma.machine.create({
-        data: {
-          serialNumber: machineDto.serialNumber,
-          producent: machineDto.producent,
-          productionRate: model.defaultRate,
-          status: 'IDLE' as MachineModel['status'],
-          lastStatusUpdate: new Date(),
-          version: 1,
-          type: {
-            connect: {
-              name: machineDto.type,
-            },
-          },
-          model: {
-            connect: {
-              name: machineDto.model,
-            },
-          },
-        },
-        include: {
-          type: true,
-          model: true,
-        },
-      });
-
-      this.totalCount += 1;
-
-      return machine;
-    } catch (err: unknown) {
-      if (err.constructor.name === 'PrismaClientKnownRequestError') {
-        if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
-          throw new BadRequestException('Serial Number must be unique');
-        }
-
-        if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2003') {
-          throw new BadRequestException(
-            'Some of the reference key are incorrect',
-          );
-        }
-      }
-    }
-
-    throw new InternalServerErrorException('Could not create machine');
-  }
-
-  async findOne(serialNumber: string) {
-    const machine = await this.prisma.machine.findUnique({
-      where: { serialNumber: serialNumber },
-      include: {
-        type: true,
-        model: true,
-      },
+  findOne(serialNumber: string) {
+    return this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+      with: { model: true, type: true },
     });
+  }
 
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
-
-    return machine;
+  findStatus(serialNumber: string) {
+    return this.conn.query.PGMachine.findFirst({
+      columns: { status: true },
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+    });
   }
 
   async update(serialNumber: string, machineDto: UpdateMachineDto) {
-    const machine = await this.prisma.machine.findUnique({
-      where: { serialNumber: serialNumber },
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
     });
 
     if (!machine) {
       throw new NotFoundException('Machine not found');
     }
 
-    const data: Partial<MachineModel> = {};
-    data.version = machine.version + 1;
+    const data: Partial<typeof machine> = {
+      ...machineDto,
+      version: machine.version + 1,
+    };
 
     if (machineDto.status) {
-      data.status = machineDto.status as MachineModel['status'];
       data.lastStatusUpdate = new Date();
     }
 
-    if (machineDto.productionRate) {
-      data.productionRate = machineDto.productionRate;
-    }
-
-    try {
-      const machine = await this.prisma.machine.update({
-        where: { serialNumber: serialNumber },
-        data,
-        include: {
-          type: true,
-          model: true,
-        },
-      });
-
-      return machine;
-    } catch (err) {
-      throw new InternalServerErrorException('Could not create machine');
-    }
+    return this.conn
+      .update(schema.PGMachine)
+      .set(data)
+      .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning()[0];
   }
 
-  async delete(serialNumber: string): Promise<void> {
-    try {
-      await this.prisma.machine.delete({
-        where: { serialNumber: serialNumber },
-      });
-
-      this.totalCount -= 1;
-    } catch (err) {
-      if (err.constructor.name === 'PrismaClientKnownRequestError') {
-        if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2025') {
-          throw new NotFoundException('Machine not found');
-        }
-      }
-
-      throw new InternalServerErrorException('Could not create machine');
-    }
-  }
-
-  async findMany(queryDto: QueryMachineDto) {
+  async query(queryDto: QueryMachineDto) {
     const query = this.queryBuilder(queryDto);
 
-    const take = Number(queryDto.limit) || this.defaultLimit;
-    const skip = Number(queryDto.offset) || 0;
+    const limit = Number(queryDto.limit) || this.defaultLimit;
+    const offset = Number(queryDto.offset) || 0;
 
-    return await this.prisma.machine.findMany({
-      where: {
-        AND: query,
-      },
-      take,
-      skip,
-      include: {
+    const prepare = this.conn.query.PGMachine.findMany({
+      where: and(...query),
+      with: {
         type: true,
         model: true,
       },
-    });
-  }
+    }).prepare('query_machines');
 
-  async paginate(queryDto: QueryMachineDto) {
-    const query = this.queryBuilder(queryDto);
+    const machines = await prepare.execute({ offset });
 
-    const take = Number(queryDto.limit) || this.defaultLimit;
-    const skip = Number(queryDto.offset) || 0;
-
-    const [machines, total] = await this.prisma.$transaction([
-      this.prisma.machine.findMany({
-        where: {
-          AND: query,
-        },
-        take,
-        skip,
-        include: {
-          type: true,
-          model: true,
-        },
-      }),
-      this.prisma.machine.count({ where: { AND: query } }),
-    ]);
-
-    return { machines, total };
+    return { data: machines.slice(offset, limit), total: machines.length };
   }
 
   queryBuilder(queryDto: QueryMachineDto) {
-    const query = [];
+    const query: SQLWrapper[] = [];
+    let tmp: any;
 
     if (queryDto.serialNumber) {
-      query.push({
-        serialNumber: {
-          contains: queryDto.serialNumber,
-        },
-      });
+      query.push(
+        like(schema.PGMachine.serialNumber, `%${queryDto.serialNumber}%`),
+      );
     }
 
     if (queryDto.producents) {
-      query.push({
-        producent: {
-          in: queryDto.producents.split(','),
-        },
-      });
-    }
-
-    if (queryDto.types) {
-      query.push({
-        type: {
-          name: {
-            in: queryDto.types.split(','),
-          },
-        },
-      });
-    }
-
-    if (queryDto.models) {
-      query.push({ model: { name: { in: queryDto.models.split(',') } } });
+      tmp = queryDto.producents.split(',').map((v) => v.toUpperCase());
+      query.push(inArray(schema.PGMachine.producent, tmp));
     }
 
     if (queryDto.status) {
-      query.push({
-        status: {
-          in: queryDto.status.split(',').map((status) => status.toUpperCase()),
-        },
-      });
+      tmp = queryDto.status.split(',').map((v) => v.toUpperCase());
+      query.push(inArray(schema.PGMachine.status, tmp));
     }
 
     if (queryDto.rate) {
-      const productionRate = {};
-      productionRate[queryDto.rateFilter || 'equals'] = Number(queryDto.rate);
-
-      query.push({ productionRate });
+      tmp = this.getCompareMethod(queryDto.rateFilter);
+      query.push(tmp(schema.PGMachine.productionRate, Number(queryDto.rate)));
     }
 
     if (queryDto.startedAt) {
-      const startedAt = {};
-      startedAt[queryDto.startedAtFilter || 'equals'] = new Date(
-        queryDto.startedAt,
-      );
+      tmp = this.getCompareMethod(queryDto.startedAtFilter);
+      const date = new Date(queryDto.startedAt);
+      date.setHours(0, 0, 0, 0);
 
-      query.push({ startedAt });
+      query.push(tmp(schema.PGMachine.lastStatusUpdate, date));
+    }
+
+    if (queryDto.types) {
+      query.push(inArray(schema.PGMachine.type, queryDto.types.split(',')));
+    }
+
+    if (queryDto.models) {
+      query.push(inArray(schema.PGMachine.type, queryDto.models.split(',')));
     }
 
     return query;
+  }
+
+  private getCompareMethod(filter: string) {
+    switch (filter) {
+      case 'eq':
+        return eq;
+
+      case 'gt':
+        return gt;
+
+      case 'gte':
+        return gte;
+
+      case 'lt':
+        return lt;
+
+      case 'lte':
+        return lte;
+
+      default:
+        return eq;
+    }
   }
 }

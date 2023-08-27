@@ -1,14 +1,17 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
+import { MachineDto } from '../dto/machine.dto';
+import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
-import { CreateMachineDto } from '../dto/incoming/create-machine.dto';
-import { MachinesRepository } from '../repositories/machines.repository';
-import { KepwareService } from './kepware.service';
-import { plainToInstance } from 'class-transformer';
-import { MachineDto } from '../dto/machine.dto';
-import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
+import { MachinesRepository } from '../repositories/machines.repository';
+import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 
 @Injectable()
@@ -18,63 +21,33 @@ export class MachinesService {
     private readonly kepwareService: KepwareService,
   ) {}
 
-  async store(machineDto: CreateMachineDto): Promise<ResponseMachineDto> {
-    try {
-      const machine = await this.machinesRepository.create(machineDto);
-
-      this.kepwareService.emitMachineCreated({
-        serialNumber: machine.serialNumber,
-        productionRate: machine.productionRate,
-        status: machine.status,
-        version: machine.version,
-        workBase: machine.model.workBase,
-        workRange: machine.model.workRange,
-        faultRate: machine.model.faultRate,
-        defaultRate: machine.model.defaultRate,
-        minRate: machine.model.minRate,
-        maxRate: machine.model.maxRate,
-      });
-
-      return { data: plainToInstance(MachineDto, machine) };
-    } catch (err) {
-      throw err;
-    }
-  }
-
   async findOne(serialNumber: string): Promise<ResponseMachineDto> {
-    try {
-      const data = plainToInstance(
-        MachineDto,
-        await this.machinesRepository.findOne(serialNumber),
-      );
+    const machine = await this.machinesRepository.findOne(serialNumber);
 
-      return { data };
-    } catch (err) {
-      throw err;
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
     }
+
+    return { data: plainToInstance(MachineDto, machine) };
   }
 
   async findMachineStatus(
     serialNumber: string,
   ): Promise<ResponseMachineStatusDto> {
-    try {
-      const data = await this.machinesRepository.findOne(serialNumber);
+    const machine = await this.machinesRepository.findStatus(serialNumber);
 
-      return { data: { status: data.status } };
-    } catch (err) {
-      throw err;
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
     }
+
+    return { data: machine };
   }
 
   async findMany(queryDto: QueryMachineDto): Promise<ResponseMachinesDto> {
-    const { machines, total } = await this.machinesRepository.paginate(
-      queryDto,
-    );
-
-    const data = plainToInstance(MachineDto, machines);
+    const { data, total } = await this.machinesRepository.query(queryDto);
 
     return {
-      data,
+      data: plainToInstance(MachineDto, data),
       meta: {
         count: data.length,
         offset: Number(queryDto.offset) || 0,
@@ -106,16 +79,6 @@ export class MachinesService {
       });
 
       return { data: plainToInstance(MachineDto, machine) };
-    } catch (err) {
-      throw err;
-    }
-  }
-
-  async destroy(serialNumber: string): Promise<void> {
-    try {
-      await this.machinesRepository.delete(serialNumber);
-
-      this.kepwareService.emitMachineDeleted({ serialNumber: serialNumber });
     } catch (err) {
       throw err;
     }
