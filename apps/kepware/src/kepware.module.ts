@@ -8,7 +8,7 @@ import { ANALYSER_QUEUE } from './constants/queues';
 import { KepwareController } from './kepware.controller';
 import { KepwareService } from './services/kepware.service';
 import { KepwareRepository } from './repositories/kepware.repository';
-import { PrismaService } from './repositories/prisma.service';
+import { PrismaConnection } from './database/prisma-connection';
 import { AnalyserService } from './services/analyser.service';
 
 @Module({
@@ -28,7 +28,7 @@ import { AnalyserService } from './services/analyser.service';
   controllers: [KepwareController],
   providers: [
     KepwareService,
-    PrismaService,
+    PrismaConnection,
     AnalyserService,
     KepwareRepository,
   ],

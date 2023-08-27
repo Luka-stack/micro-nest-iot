@@ -20,9 +20,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./apps/micro-iot/test/jest-e2e.json",
-    "gen:db:kepware": "prisma generate --schema prisma/kepware/schema.prisma",
-    "mig:db:kepware": "prisma migrate dev --schema prisma/kepware/schema.prisma",
-    "seed:db:kepware": "prisma db seed",
+    "gen:db:kepware": "cd ./apps/kepware && prisma generate --schema ./src/database/schema.prisma",
+    "mig:db:kepware": "cd ./apps/kepware && prisma migrate dev --schema ./src/database/schema.prisma",
+    "seed:db:kepware": "cd ./apps/kepware && tsx ./src/database/seed.ts",
     "gen:db:machines": "drizzle-kit generate:pg --config=./apps/machines/drizzle.config.ts",
     "mig:db:machines": "cd ./apps/machines && tsx ./src/database/migrations/migrate.ts",
     "seed:db:machines": "cd ./apps/machines && tsx ./src/database/initial-seed.ts"
@@ -80,9 +80,6 @@
     "tsconfig-paths": "4.2.0",
     "tsx": "^3.12.7",
     "typescript": "^5.2.2"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   },
   "jest": {
     "moduleFileExtensions": [

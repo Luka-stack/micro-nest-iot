@@ -9,11 +9,11 @@ import {
 } from '@nestjs/common';
 import { Prisma, Machine } from '@prisma/db-kepware';
 
-import { PrismaService } from './prisma.service';
+import { PrismaConnection } from '../database/prisma-connection';
 
 @Injectable()
 export class KepwareRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaConnection) {}
 
   async create(data: MachineCreatedMessage['data']): Promise<void> {
     try {
@@ -42,6 +42,7 @@ export class KepwareRepository {
       throw new BadRequestException('Bad version');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { serialNumber, ...rest } = data;
 
     try {
