@@ -7,12 +7,12 @@ END $$;
 CREATE TABLE IF NOT EXISTS "machines" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"serial_number" varchar(50),
-	"producent" varchar(50),
 	"status" "status" DEFAULT 'IDLE',
 	"last_status_update" timestamp with time zone DEFAULT now(),
 	"production_rate" integer,
-	"type_id" integer,
-	"model_id" integer,
+	"producent" varchar(50),
+	"type" varchar(50),
+	"model" varchar(50),
 	"version" integer
 );
 --> statement-breakpoint

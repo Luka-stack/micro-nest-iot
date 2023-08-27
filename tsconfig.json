@@ -23,6 +23,12 @@
       ],
       "@iot/communication/*": [
         "libs/communication/src/*"
+      ],
+      "@iot/database": [
+        "libs/database/src"
+      ],
+      "@iot/database/*": [
+        "libs/database/src/*"
       ]
     }
   }

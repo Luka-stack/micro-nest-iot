@@ -23,14 +23,14 @@ export const PGMachine = pgTable(
   {
     id: serial('id').primaryKey(),
     serialNumber: varchar('serial_number', { length: 50 }),
-    producent: varchar('producent', { length: 50 }),
     status: PGMachineStatus('status').default('IDLE'),
     lastStatusUpdate: timestamp('last_status_update', {
       withTimezone: true,
     }).defaultNow(),
     productionRate: integer('production_rate'),
-    typeId: integer('type_id'),
-    modelId: integer('model_id'),
+    producent: varchar('producent', { length: 50 }),
+    type: varchar('type', { length: 50 }),
+    model: varchar('model', { length: 50 }),
     version: integer('version'),
   },
   (machines) => ({
@@ -117,5 +117,16 @@ export const PGModelsRelations = relations(PGModel, ({ one }) => ({
   producent: one(PGProducent, {
     fields: [PGModel.producentId],
     references: [PGProducent.id],
+  }),
+}));
+
+export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
+  type: one(PGType, {
+    fields: [PGMachine.type],
+    references: [PGType.name],
+  }),
+  model: one(PGModel, {
+    fields: [PGMachine.model],
+    references: [PGModel.name],
   }),
 }));

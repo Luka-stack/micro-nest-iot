@@ -1,9 +1,9 @@
 import { Exclude, plainToInstance, Transform } from 'class-transformer';
-import { Machine as MachineModel, Status } from '@prisma/db-machines';
+
 import { MachineTypeDto } from './machine-type.dto';
 import { MachineModelDto } from './machine-model.dto';
 
-export class MachineDto implements MachineModel {
+export class MachineDto {
   @Exclude()
   id: number;
 
@@ -21,17 +21,11 @@ export class MachineDto implements MachineModel {
   )
   model: MachineModelDto;
 
-  status: Status;
+  status: string;
 
   lastStatusUpdate: Date;
 
   productionRate: number;
-
-  @Exclude()
-  typeId: number;
-
-  @Exclude()
-  modelId: number;
 
   @Exclude()
   version: number;

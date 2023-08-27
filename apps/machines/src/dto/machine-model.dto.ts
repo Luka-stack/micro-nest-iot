@@ -1,7 +1,6 @@
-import { Model as MachineModel } from '@prisma/db-machines';
 import { Exclude, Expose, Transform } from 'class-transformer';
 
-export class MachineModelDto implements MachineModel {
+export class MachineModelDto {
   @Exclude()
   id: number;
 

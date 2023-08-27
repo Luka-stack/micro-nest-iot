@@ -1,7 +1,6 @@
-import { Producent as MachineProducent } from '@prisma/db-machines';
 import { Exclude } from 'class-transformer';
 
-export class MachineProducentDto implements MachineProducent {
+export class MachineProducentDto {
   @Exclude()
   id: number;
 

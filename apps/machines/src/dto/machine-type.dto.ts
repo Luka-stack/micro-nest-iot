@@ -1,10 +1,6 @@
-import {
-  Type as MachineType,
-  Producent as MachineProducent,
-} from '@prisma/db-machines';
 import { Exclude, Transform } from 'class-transformer';
 
-export class MachineTypeDto implements MachineType {
+export class MachineTypeDto {
   @Exclude()
   id: number;
 
@@ -13,7 +9,7 @@ export class MachineTypeDto implements MachineType {
   imageUrl: string;
 
   @Transform(({ value }) => {
-    return value.map((p: MachineProducent) => p.name);
+    return value.map((p) => p.name);
   })
   producents: string[];
 }

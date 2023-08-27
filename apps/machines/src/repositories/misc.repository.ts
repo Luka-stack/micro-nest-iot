@@ -1,37 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import { PrismaService } from './prisma.service';
+import { PG_CONNECTION } from '../constants';
+import * as schema from '../database/schema';
 
 @Injectable()
 export class MiscRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PG_CONNECTION)
+    private readonly conn: PostgresJsDatabase<typeof schema>,
+  ) {}
 
-  async findProducents() {
-    return await this.prisma.producent.findMany({});
+  findProducents() {
+    return this.conn.select().from(schema.PGProducent);
   }
 
-  async findTypesIncludeProducent() {
-    return await this.prisma.type.findMany({
-      include: {
-        producents: {
-          select: {
+  async findTypes() {
+    const types = await this.conn.query.PGProducentsToTypes.findMany({
+      columns: {},
+      with: {
+        producent: {
+          columns: {
             name: true,
           },
         },
+        type: true,
       },
+    });
+
+    const typeMap = new Map<number, (typeof types)[number]>();
+    const producentMap = new Map<number, { name: string }[]>();
+
+    types.forEach((obj) => {
+      if (!producentMap.has(obj.type.id)) {
+        producentMap.set(obj.type.id, []);
+      }
+
+      producentMap.get(obj.type.id).push(obj.producent);
+
+      if (!typeMap.get(obj.type.id)) {
+        typeMap.set(obj.type.id, obj);
+      }
+    });
+
+    return Array.from(typeMap.values()).map((type) => {
+      delete type.producent;
+
+      return {
+        ...type.type,
+        producents: producentMap.get(type.type.id) || [],
+      };
     });
   }
 
-  async findModelsIncludeRelations() {
-    return await this.prisma.model.findMany({
-      include: {
-        type: {
-          select: {
+  findModels() {
+    return this.conn.query.PGModel.findMany({
+      with: {
+        producent: {
+          columns: {
             name: true,
           },
         },
-        producent: {
-          select: {
+        type: {
+          columns: {
             name: true,
           },
         },

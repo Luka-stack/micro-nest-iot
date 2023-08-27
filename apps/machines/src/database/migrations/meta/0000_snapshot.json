@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "0d48eb7f-1a47-481c-bc0b-42aeba364b6d",
+  "id": "f042229c-288f-4e32-9912-4be2a591efda",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "machines": {
@@ -16,12 +16,6 @@
         },
         "serial_number": {
           "name": "serial_number",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "producent": {
-          "name": "producent",
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
@@ -46,15 +40,21 @@
           "primaryKey": false,
           "notNull": false
         },
-        "type_id": {
-          "name": "type_id",
-          "type": "integer",
+        "producent": {
+          "name": "producent",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
-        "model_id": {
-          "name": "model_id",
-          "type": "integer",
+        "type": {
+          "name": "type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
         },
