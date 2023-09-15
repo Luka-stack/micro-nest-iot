@@ -4,10 +4,12 @@ import { NestFactory } from '@nestjs/core';
 import { AnalyserModule } from './analyser.module';
 import { ANALYSER_QUEUE } from './constants/queues';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AnalyserModule);
   const rmqService = app.get<RmqService>(RmqService);
+  const configService = app.get(ConfigService);
 
   app.connectMicroservice(rmqService.getOptions(ANALYSER_QUEUE));
 
@@ -16,7 +18,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   await app.startAllMicroservices();
-  await app.listen(7000);
+  await app.listen(configService.get('PORT'));
 }
 
 bootstrap();
