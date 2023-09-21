@@ -32,8 +32,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 
     const user = await this.authService.findUser(profile.emails[0].value);
 
+    console.log('Strategy Validate DB User', user);
+
     if (user) return user;
 
-    return { email: profile.emails[0].value, displayName: profile.displayName };
+    return {
+      tmp: true,
+      email: profile.emails[0].value,
+      displayName: profile.displayName,
+    };
   }
 }

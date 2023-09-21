@@ -20,6 +20,8 @@ export class SessionSerializer extends PassportSerializer {
 
     const user = await this.authService.findUser(payload.email);
 
+    console.log('DBUser', user);
+
     if (user) {
       return done(null, user);
     }

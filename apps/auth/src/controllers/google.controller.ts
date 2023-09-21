@@ -17,7 +17,7 @@ export class GoogleController {
   @Get('redirect')
   @UseGuards(GoogleGuard)
   redirect(@Req() req: Request, @Res() res: Response) {
-    console.log(req);
+    console.log('Redirect User', req.user);
 
     return res.redirect(
       `${this.configService.get('CLIENT_LOCATION')}/auth/signup`,
