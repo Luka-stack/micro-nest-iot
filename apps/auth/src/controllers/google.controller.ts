@@ -1,8 +1,10 @@
 import { ConfigService } from '@nestjs/config';
-import { Request, Response } from 'express';
-import { Controller, Get, UseGuards, Req, Res } from '@nestjs/common';
+import { Response } from 'express';
+import { Controller, Get, UseGuards, Res } from '@nestjs/common';
 
 import { GoogleGuard } from '../guards/google.guard';
+import { GetUser } from '../decorators/get-user.decorator';
+import { UserDto } from '../dto/user.dto';
 
 @Controller('/v1/google')
 export class GoogleController {
@@ -16,8 +18,10 @@ export class GoogleController {
 
   @Get('redirect')
   @UseGuards(GoogleGuard)
-  redirect(@Req() req: Request, @Res() res: Response) {
-    console.log('Redirect User', req.user);
+  redirect(@GetUser() user: UserDto | null, @Res() res: Response) {
+    if (user && user.authenticated) {
+      return res.redirect(`${this.configService.get('CLIENT_LOCATION')}/`);
+    }
 
     return res.redirect(
       `${this.configService.get('CLIENT_LOCATION')}/auth/signup`,

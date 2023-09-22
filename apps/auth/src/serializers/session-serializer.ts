@@ -2,6 +2,7 @@ import { PassportSerializer } from '@nestjs/passport';
 import { AuthService } from '../auth.service';
 import { Injectable } from '@nestjs/common';
 import { VerifyCallback } from 'passport-google-oauth20';
+import { UserDocument } from '../schema/user.schema';
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
@@ -9,7 +10,7 @@ export class SessionSerializer extends PassportSerializer {
     super();
   }
 
-  serializeUser(user: any, done: VerifyCallback) {
+  serializeUser(user: UserDocument, done: VerifyCallback) {
     done(null, user);
   }
 

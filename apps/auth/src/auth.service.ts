@@ -1,9 +1,18 @@
+import bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 
 import { User, UserDocument } from './schema/user.schema';
 import { OAuthSignupDto } from './dto/oauth-signup.dto';
+import { LocalSignupDto } from './dto/local-signup.dto';
+import { plainToInstance } from 'class-transformer';
+import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,17 +24,55 @@ export class AuthService {
 
   async findUser(email: string): Promise<UserDocument | null> {
     const user = await this.userModel.findOne({ email });
-    console.dir(user);
 
     return user;
   }
 
-  async signupUp(signup: OAuthSignupDto) {
+  async oauthSignup(signup: OAuthSignupDto) {
     const user = await this.userModel.create({
       ...signup,
       authenticated: true,
     });
 
-    return user;
+    return { data: plainToInstance(UserDto, user.toObject()) };
+  }
+
+  async localSignup(signup: LocalSignupDto) {
+    const salt = bcrypt.genSaltSync();
+    const hashed = bcrypt.hashSync(signup.password, salt);
+
+    try {
+      const user = await this.userModel.create({
+        ...signup,
+        password: hashed,
+        authenticated: true,
+      });
+
+      return { data: plainToInstance(UserDto, user.toObject()) };
+    } catch (err) {
+      if (err.code && err.code === 11000) {
+        throw new BadRequestException('Email already in use');
+      }
+
+      throw new InternalServerErrorException(
+        "We couldn't create account for you. Try later",
+      );
+    }
+  }
+
+  async validateUser(email: string, password: string) {
+    const user = await this.userModel.findOne({ email });
+
+    if (!user) {
+      throw new BadRequestException('Wrong credentials.');
+    }
+
+    const valid = bcrypt.compareSync(password, user.password);
+
+    if (valid) {
+      return user;
+    }
+
+    throw new BadRequestException('Wrong credentials.');
   }
 }
