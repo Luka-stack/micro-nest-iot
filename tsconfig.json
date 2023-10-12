@@ -29,6 +29,12 @@
       ],
       "@iot/database/*": [
         "libs/database/src/*"
+      ],
+      "@iot/security": [
+        "libs/security/src"
+      ],
+      "@iot/security/*": [
+        "libs/security/src/*"
       ]
     }
   }

@@ -11,8 +11,9 @@ import {
 import { User, UserDocument } from './schema/user.schema';
 import { OAuthSignupDto } from './dto/oauth-signup.dto';
 import { LocalSignupDto } from './dto/local-signup.dto';
-import { plainToInstance } from 'class-transformer';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserDto } from './dto/user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
 
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async findUser(email: string): Promise<UserDocument | null> {
@@ -74,5 +76,9 @@ export class AuthService {
     }
 
     throw new BadRequestException('Wrong credentials.');
+  }
+
+  login(user: UserDto) {
+    return this.jwtService.sign(instanceToPlain(user));
   }
 }

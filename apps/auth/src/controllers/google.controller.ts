@@ -3,7 +3,7 @@ import { Response } from 'express';
 import { Controller, Get, UseGuards, Res } from '@nestjs/common';
 
 import { GoogleGuard } from '../guards/google.guard';
-import { GetUser } from '../decorators/get-user.decorator';
+import { SSOUser } from '../decorators/sso-user.decorator';
 import { UserDto } from '../dto/user.dto';
 
 @Controller('/v1/google')
@@ -18,8 +18,10 @@ export class GoogleController {
 
   @Get('redirect')
   @UseGuards(GoogleGuard)
-  redirect(@GetUser() user: UserDto | null, @Res() res: Response) {
+  redirect(@SSOUser() user: UserDto | null, @Res() res: Response) {
     if (user && user.authenticated) {
+      // TODO Attach JWT Token
+
       return res.redirect(`${this.configService.get('CLIENT_LOCATION')}/`);
     }
 

@@ -10,6 +10,8 @@ import { PassportModule } from '@nestjs/passport';
 import { SessionSerializer } from './serializers/session-serializer';
 import { AuthController } from './controllers/auth.controller';
 import { LocalStrategy } from './strategies/local.strategy';
+import { JwtModule } from '@nestjs/jwt';
+import { SecurityModule } from '@iot/security';
 
 @Module({
   imports: [
@@ -17,7 +19,17 @@ import { LocalStrategy } from './strategies/local.strategy';
       isGlobal: true,
       envFilePath: './apps/auth/.env',
     }),
+    SecurityModule,
     PassportModule.register({ session: true }),
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get('JWT_EXPIRATION_SECONDS')}s`,
+        },
+      }),
+    }),
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(MONGODB_URI),

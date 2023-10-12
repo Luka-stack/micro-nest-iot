@@ -1,19 +1,26 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { GetUser } from '../decorators/get-user.decorator';
+import { SSOUser } from '../decorators/sso-user.decorator';
 import { AuthService } from '../auth.service';
 import { OAuthSignupDto } from '../dto/oauth-signup.dto';
 import { OAuthSignupGuard } from '../guards/oauth-signup.guard';
 import { LocalSignupDto } from '../dto/local-signup.dto';
-import { LocalGuard } from '../guards/local.guard';
 import { UserDto } from '../dto/user.dto';
 import { UserResponse } from '../dto/user.response';
+import { LocalGuard } from '../guards/local.guard';
+import { CurrentUser, JwtAuthGuard, UserPayload } from '@iot/security';
 
 @Controller('/v1')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Get('ssouser')
+  ssoUser(@SSOUser() user: UserDto): UserResponse {
+    return { data: user };
+  }
+
   @Get('whoiam')
-  whoiam(@GetUser() user: UserDto): UserResponse {
+  @UseGuards(JwtAuthGuard)
+  whoiam(@CurrentUser() user: UserPayload) {
     return { data: user };
   }
 
@@ -30,7 +37,9 @@ export class AuthController {
 
   @Post('/login')
   @UseGuards(LocalGuard)
-  login(@GetUser() user: UserDto): UserResponse {
-    return { data: user };
+  login(@SSOUser() user: UserDto) {
+    const accessToken = this.authService.login(user);
+
+    return { accessToken };
   }
 }
