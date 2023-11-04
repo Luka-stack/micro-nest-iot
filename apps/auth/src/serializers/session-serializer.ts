@@ -15,13 +15,9 @@ export class SessionSerializer extends PassportSerializer {
   }
 
   async deserializeUser(payload: any, done: VerifyCallback) {
-    console.log('Payload', payload);
-
     if (!payload.email) return done(null, null);
 
     const user = await this.authService.findUser(payload.email);
-
-    console.log('DBUser', user);
 
     if (user) {
       return done(null, user);

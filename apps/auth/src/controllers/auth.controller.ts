@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { SSOUser } from '../decorators/sso-user.decorator';
 import { AuthService } from '../auth.service';
 import { OAuthSignupDto } from '../dto/oauth-signup.dto';
@@ -31,15 +38,17 @@ export class AuthController {
   }
 
   @Post('/signup')
+  @HttpCode(201)
   localSignup(@Body() signup: LocalSignupDto): Promise<UserResponse> {
     return this.authService.localSignup(signup);
   }
 
   @Post('/login')
+  @HttpCode(200)
   @UseGuards(LocalGuard)
   login(@SSOUser() user: UserDto) {
     const accessToken = this.authService.login(user);
 
-    return { accessToken };
+    return { accessToken, user };
   }
 }

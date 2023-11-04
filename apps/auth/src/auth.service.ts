@@ -53,7 +53,9 @@ export class AuthService {
       return { data: plainToInstance(UserDto, user.toObject()) };
     } catch (err) {
       if (err.code && err.code === 11000) {
-        throw new BadRequestException('Email already in use');
+        throw new BadRequestException({
+          email: 'Email already in use',
+        });
       }
 
       throw new InternalServerErrorException(

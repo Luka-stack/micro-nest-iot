@@ -9,7 +9,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
   const configService = app.get(ConfigService);
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+    }),
+  );
   app.setGlobalPrefix('auth');
   app.enableCors({
     origin: configService.get('CLIENT_LOCATION'),
