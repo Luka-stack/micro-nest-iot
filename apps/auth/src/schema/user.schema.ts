@@ -1,5 +1,5 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class User {
@@ -14,9 +14,6 @@ export class User {
 
   @Prop({ required: true })
   role: string;
-
-  @Prop({ required: true })
-  authenticated: boolean;
 }
 
 export type UserDocument = User & Document;

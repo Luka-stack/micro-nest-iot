@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
-import { GoogleController } from './controllers/google.controller';
-import { AuthService } from './auth.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { GoogleStrategy } from './strategies/google.strategy';
-import { MongooseModule } from '@nestjs/mongoose';
-import { MONGODB_URI } from 'apps/analyser/src/constants/database';
-import { User, UserSchema } from './schema/user.schema';
-import { PassportModule } from '@nestjs/passport';
-import { SessionSerializer } from './serializers/session-serializer';
-import { AuthController } from './controllers/auth.controller';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
+import { MongooseModule } from '@nestjs/mongoose';
+import { PassportModule } from '@nestjs/passport';
 import { SecurityModule } from '@iot/security';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+import { AuthService } from './auth.service';
+import { MONGODB_URI } from './constants/database';
+import { LocalStrategy } from './strategies/local.strategy';
+import { AuthController } from './controllers/auth.controller';
+import { User, UserSchema } from './schema/user.schema';
 
 @Module({
   imports: [
@@ -20,7 +18,7 @@ import { SecurityModule } from '@iot/security';
       envFilePath: './apps/auth/.env',
     }),
     SecurityModule,
-    PassportModule.register({ session: true }),
+    PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -38,7 +36,7 @@ import { SecurityModule } from '@iot/security';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  controllers: [GoogleController, AuthController],
-  providers: [AuthService, GoogleStrategy, LocalStrategy, SessionSerializer],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy],
 })
 export class AuthModule {}

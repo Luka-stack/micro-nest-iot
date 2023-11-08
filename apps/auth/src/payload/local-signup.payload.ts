@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class LocalSignupDto {
+export class LocalSignupPayload {
   @IsEmail()
   @IsNotEmpty()
   email: string;

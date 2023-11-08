@@ -1,6 +1,9 @@
 import bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
+import { JwtService } from '@nestjs/jwt';
+import { USER_ROLES } from '@iot/security';
 import { InjectModel } from '@nestjs/mongoose';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import {
   BadRequestException,
   Injectable,
@@ -8,12 +11,11 @@ import {
   Logger,
 } from '@nestjs/common';
 
-import { User, UserDocument } from './schema/user.schema';
-import { OAuthSignupDto } from './dto/oauth-signup.dto';
-import { LocalSignupDto } from './dto/local-signup.dto';
-import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserDto } from './dto/user.dto';
-import { JwtService } from '@nestjs/jwt';
+import { GOOGLE_TOKEN_INFO } from './constants/api';
+import { User, UserDocument } from './schema/user.schema';
+import { LocalSignupPayload } from './payload/local-signup.payload';
+import { ProviderLoginPayload } from './payload/provider-login.payload';
 
 @Injectable()
 export class AuthService {
@@ -30,16 +32,7 @@ export class AuthService {
     return user;
   }
 
-  async oauthSignup(signup: OAuthSignupDto) {
-    const user = await this.userModel.create({
-      ...signup,
-      authenticated: true,
-    });
-
-    return { data: plainToInstance(UserDto, user.toObject()) };
-  }
-
-  async localSignup(signup: LocalSignupDto) {
+  async localSignup(signup: LocalSignupPayload) {
     const salt = bcrypt.genSaltSync();
     const hashed = bcrypt.hashSync(signup.password, salt);
 
@@ -47,10 +40,9 @@ export class AuthService {
       const user = await this.userModel.create({
         ...signup,
         password: hashed,
-        authenticated: true,
       });
 
-      return { data: plainToInstance(UserDto, user.toObject()) };
+      return plainToInstance(UserDto, user.toObject());
     } catch (err) {
       if (err.code && err.code === 11000) {
         throw new BadRequestException({
@@ -81,6 +73,36 @@ export class AuthService {
   }
 
   login(user: UserDto) {
-    return this.jwtService.sign(instanceToPlain(user));
+    const accessToken = this.jwtService.sign(instanceToPlain(user));
+    return { accessToken, user };
+  }
+
+  async loginProvider(provider: string, login: ProviderLoginPayload) {
+    if (provider !== 'google') {
+      throw new BadRequestException('Unsupported provider');
+    }
+
+    const response = await fetch(
+      `${GOOGLE_TOKEN_INFO}?id_token=${login.idToken}`,
+    );
+
+    if (!response.ok) {
+      throw new BadRequestException('Provider cannot be authenticated');
+    }
+
+    let dbUser = await this.userModel.findOne({ email: login.email });
+
+    if (!dbUser) {
+      dbUser = await this.userModel.create({
+        email: login.email,
+        displayName: login.name,
+        role: USER_ROLES.EMPLOYEE, // TODO
+      });
+    }
+
+    const user = plainToInstance(UserDto, dbUser.toObject());
+    const accessToken = this.jwtService.sign(instanceToPlain(user));
+
+    return { accessToken, user };
   }
 }

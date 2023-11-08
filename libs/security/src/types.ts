@@ -1,7 +1,15 @@
+export const USER_ROLES = {
+  ADMIN: 'administrator',
+  MAINTAINER: 'maintainter',
+  EMPLOYEE: 'employee',
+} as const;
+
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
 export type UserPayload = {
   email: string;
   displayName: string;
-  role: string;
+  role: UserRole;
 };
 
 export type JwtPayload = UserPayload & {
