@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/db-kepware';
 
-export const seedKepwareDB = async () => {
+async function main() {
+  console.log('🌱 Seeding... 🌱');
+
   const client = new PrismaClient();
 
   await Promise.all([
@@ -365,5 +367,8 @@ export const seedKepwareDB = async () => {
     }),
   ]);
 
-  console.info('Kepware database seeded');
-};
+  console.log('🌱 Finished Seeding 🌱');
+  process.exit(0);
+}
+
+main();

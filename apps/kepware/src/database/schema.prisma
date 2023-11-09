@@ -3,7 +3,7 @@
 
 generator client {
     provider = "prisma-client-js"
-    output   = "../../node_modules/@prisma/db-kepware"
+    output   = "../../../../node_modules/@prisma/db-kepware"
 }
 
 datasource db {
