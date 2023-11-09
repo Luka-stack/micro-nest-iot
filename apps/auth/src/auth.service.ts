@@ -66,7 +66,7 @@ export class AuthService {
     const valid = bcrypt.compareSync(password, user.password);
 
     if (valid) {
-      return user;
+      return plainToInstance(UserDto, user.toObject());
     }
 
     throw new BadRequestException('Wrong credentials.');
