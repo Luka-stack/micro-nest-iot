@@ -10,6 +10,7 @@ import {
   like,
   lt,
   lte,
+  sql,
 } from 'drizzle-orm';
 
 import * as schema from '../database/schema';
@@ -58,30 +59,49 @@ export class MachinesRepository {
       data.lastStatusUpdate = new Date();
     }
 
-    return this.conn
+    const updated = await this.conn
       .update(schema.PGMachine)
       .set(data)
       .where(eq(schema.PGMachine.serialNumber, serialNumber))
-      .returning()[0];
+      .returning();
+
+    return updated[0];
   }
 
   async query(queryDto: QueryMachineDto) {
-    const query = this.queryBuilder(queryDto);
+    const where = this.queryBuilder(queryDto);
 
     const limit = Number(queryDto.limit) || this.defaultLimit;
     const offset = Number(queryDto.offset) || 0;
 
-    const prepare = this.conn.query.PGMachine.findMany({
-      where: and(...query),
+    const queryMachines = this.conn.query.PGMachine.findMany({
+      where,
+      limit,
+      offset: sql.placeholder('offset'),
       with: {
         type: true,
         model: true,
       },
+      orderBy: schema.PGMachine.serialNumber,
     }).prepare('query_machines');
 
-    const machines = await prepare.execute({ offset });
+    const queryTotal = this.conn
+      .select({
+        count: sql<number>`cast(count(${schema.PGMachine.id}) as int)`,
+      })
+      .from(schema.PGMachine)
+      .where(where)
+      .prepare('total_machines');
 
-    return { data: machines.slice(offset, limit), total: machines.length };
+    const [machines, total] = await Promise.all([
+      queryMachines.execute({ offset }),
+      queryTotal.execute(),
+    ]);
+
+    return {
+      data: machines,
+      total: total[0].count,
+    };
   }
 
   queryBuilder(queryDto: QueryMachineDto) {
@@ -95,7 +115,7 @@ export class MachinesRepository {
     }
 
     if (queryDto.producents) {
-      tmp = queryDto.producents.split(',').map((v) => v.toUpperCase());
+      tmp = queryDto.producents.split(',');
       query.push(inArray(schema.PGMachine.producent, tmp));
     }
 
@@ -125,7 +145,7 @@ export class MachinesRepository {
       query.push(inArray(schema.PGMachine.type, queryDto.models.split(',')));
     }
 
-    return query;
+    return and(...query);
   }
 
   private getCompareMethod(filter: string) {
