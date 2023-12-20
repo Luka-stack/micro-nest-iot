@@ -68,6 +68,24 @@ export class MachinesRepository {
     return updated[0];
   }
 
+  async assignEmployee(serialNumber: string, employee: string | null) {
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    const updated = await this.conn
+      .update(schema.PGMachine)
+      .set({ assignedEmployee: employee })
+      .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning();
+
+    return updated[0];
+  }
+
   async query(queryDto: QueryMachineDto) {
     const where = this.queryBuilder(queryDto);
 

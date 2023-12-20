@@ -5,11 +5,13 @@ import { PassportModule } from '@nestjs/passport';
 import { SecurityModule } from '@iot/security';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { MONGODB_URI } from './constants/database';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AuthController } from './controllers/auth.controller';
 import { User, UserSchema } from './schema/user.schema';
+import { UsersController } from './controllers/users.controller';
+import { UsersService } from './services/users.service';
 
 @Module({
   imports: [
@@ -36,7 +38,7 @@ import { User, UserSchema } from './schema/user.schema';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LocalStrategy],
+  controllers: [AuthController, UsersController],
+  providers: [AuthService, UsersService, LocalStrategy],
 })
 export class AuthModule {}

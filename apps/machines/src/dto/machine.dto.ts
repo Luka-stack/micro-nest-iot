@@ -13,6 +13,8 @@ export class MachineDto {
 
   producent: string;
 
+  assignedEmployee: string;
+
   @Transform(({ value }) => plainToInstance(MachineTypeDto, value))
   type: MachineTypeDto;
 

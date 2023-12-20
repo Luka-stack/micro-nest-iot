@@ -10,7 +10,7 @@ const main = async () => {
   console.log('🐠 Migrating... 🐠');
 
   await migrate(db, {
-    migrationsFolder: './apps/machines/src/database/migrations',
+    migrationsFolder: './src/database/migrations',
   });
 
   console.log('🐠 Migrated 🐠');

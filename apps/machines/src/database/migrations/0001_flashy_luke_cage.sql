@@ -1,0 +1,1 @@
+ALTER TABLE "machines" ADD COLUMN "assigned_employee" varchar DEFAULT null;

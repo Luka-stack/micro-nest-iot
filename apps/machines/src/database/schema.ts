@@ -31,6 +31,7 @@ export const PGMachine = pgTable(
     producent: varchar('producent', { length: 50 }),
     type: varchar('type', { length: 50 }),
     model: varchar('model', { length: 50 }),
+    assignedEmployee: varchar('assigned_employee').default(null),
     version: integer('version'),
   },
   (machines) => ({

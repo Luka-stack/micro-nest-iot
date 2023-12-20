@@ -13,6 +13,7 @@ import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
+import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 
 @Injectable()
 export class MachinesService {
@@ -82,5 +83,14 @@ export class MachinesService {
     } catch (err) {
       throw err;
     }
+  }
+
+  async assignEmployee(serialNumber: string, employee: AssignEmployeeDto) {
+    const machine = await this.machinesRepository.assignEmployee(
+      serialNumber,
+      employee.employee || null,
+    );
+
+    return { data: plainToInstance(MachineDto, machine) };
   }
 }

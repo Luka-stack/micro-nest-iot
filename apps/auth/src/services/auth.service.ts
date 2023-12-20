@@ -11,11 +11,11 @@ import {
   Logger,
 } from '@nestjs/common';
 
-import { UserDto } from './dto/user.dto';
-import { GOOGLE_TOKEN_INFO } from './constants/api';
-import { User, UserDocument } from './schema/user.schema';
-import { LocalSignupPayload } from './payload/local-signup.payload';
-import { ProviderLoginPayload } from './payload/provider-login.payload';
+import { UserDto } from '../dto/user.dto';
+import { GOOGLE_TOKEN_INFO } from '../constants/api';
+import { User, UserDocument } from '../schema/user.schema';
+import { LocalSignupPayload } from '../payload/local-signup.payload';
+import { ProviderLoginPayload } from '../payload/provider-login.payload';
 
 @Injectable()
 export class AuthService {
@@ -42,7 +42,7 @@ export class AuthService {
         password: hashed,
       });
 
-      return plainToInstance(UserDto, user.toObject());
+      return plainToInstance(UserDto, user.toObject(), { groups: ['auth'] });
     } catch (err) {
       if (err.code && err.code === 11000) {
         throw new BadRequestException({
@@ -66,7 +66,7 @@ export class AuthService {
     const valid = bcrypt.compareSync(password, user.password);
 
     if (valid) {
-      return plainToInstance(UserDto, user.toObject());
+      return plainToInstance(UserDto, user.toObject(), { groups: ['auth'] });
     }
 
     throw new BadRequestException('Wrong credentials.');
@@ -90,9 +90,11 @@ export class AuthService {
       throw new BadRequestException('Provider cannot be authenticated');
     }
 
+    let newUser = false;
     let dbUser = await this.userModel.findOne({ email: login.email });
 
     if (!dbUser) {
+      newUser = true;
       dbUser = await this.userModel.create({
         email: login.email,
         displayName: login.name,
@@ -100,9 +102,11 @@ export class AuthService {
       });
     }
 
-    const user = plainToInstance(UserDto, dbUser.toObject());
+    const user = plainToInstance(UserDto, dbUser.toObject(), {
+      groups: ['auth'],
+    });
     const accessToken = this.jwtService.sign(instanceToPlain(user));
 
-    return { accessToken, user };
+    return { accessToken, user, newUser };
   }
 }
