@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "pg",
-  "id": "f042229c-288f-4e32-9912-4be2a591efda",
+  "id": "11385355-c1be-46b5-b70a-eaaf52ccc71c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "machines": {
@@ -58,6 +58,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "assigned_employee": {
+          "name": "assigned_employee",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": null
+        },
         "version": {
           "name": "version",
           "type": "integer",
@@ -75,6 +82,130 @@
         }
       },
       "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "maintenances": {
+      "name": "maintenances",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "machine_id": {
+          "name": "machine_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "maintainer": {
+          "name": "maintainer",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "scheduled": {
+          "name": "scheduled",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "next_maintenance": {
+          "name": "next_maintenance",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "maintenances_machine_id_machines_id_fk": {
+          "name": "maintenances_machine_id_machines_id_fk",
+          "tableFrom": "maintenances",
+          "tableTo": "machines",
+          "columnsFrom": [
+            "machine_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "maintenance_schedules": {
+      "name": "maintenance_schedules",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "machine_id": {
+          "name": "machine_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "date": {
+          "name": "date",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "priority",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'NORMAL'"
+        }
+      },
+      "indexes": {
+        "schedule_machine_idx": {
+          "name": "schedule_machine_idx",
+          "columns": [
+            "machine_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "maintenance_schedules_machine_id_machines_id_fk": {
+          "name": "maintenance_schedules_machine_id_machines_id_fk",
+          "tableFrom": "maintenance_schedules",
+          "tableTo": "machines",
+          "columnsFrom": [
+            "machine_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
@@ -288,6 +419,14 @@
         "WORKING": "WORKING",
         "MAINTENANCE": "MAINTENANCE",
         "BROKEN": "BROKEN"
+      }
+    },
+    "priority": {
+      "name": "priority",
+      "values": {
+        "HIGH": "HIGH",
+        "NORMAL": "NORMAL",
+        "LOW": "LOW"
       }
     }
   },

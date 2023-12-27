@@ -1,13 +1,13 @@
-import { CommunicationModule } from '@iot/communication';
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose/dist';
 import * as Joi from 'joi';
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose/dist';
+import { CommunicationModule } from '@iot/communication';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AnalyserController } from './analyser.controller';
-import { AnalyserService } from './analyser.service';
 import { MONGODB_URI } from './constants/database';
+import { AnalyserService } from './analyser.service';
 import { Work, WorkSchema } from './schema/work.schema';
+import { AnalyserController } from './analyser.controller';
 import { Utilization, UtilizationSchema } from './schema/utilization.schema';
 
 @Module({

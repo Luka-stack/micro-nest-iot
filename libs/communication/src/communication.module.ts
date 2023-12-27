@@ -12,12 +12,12 @@ interface RmqModuleOptions {
   exports: [RmqService],
 })
 export class CommunicationModule {
-  static register({ name }: RmqModuleOptions): DynamicModule {
+  static register(opions: RmqModuleOptions[]): DynamicModule {
     return {
       module: CommunicationModule,
       imports: [
-        ClientsModule.registerAsync([
-          {
+        ClientsModule.registerAsync(
+          opions.map(({ name }) => ({
             name,
             useFactory: (configService: ConfigService) => ({
               transport: Transport.RMQ,
@@ -27,8 +27,8 @@ export class CommunicationModule {
               },
             }),
             inject: [ConfigService],
-          },
-        ]),
+          })),
+        ),
       ],
       exports: [ClientsModule],
     };

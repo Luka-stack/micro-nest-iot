@@ -1,7 +1,9 @@
+import { UserPayload } from '@iot/security';
 import { plainToInstance } from 'class-transformer';
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -9,14 +11,16 @@ import { MachineDto } from '../dto/machine.dto';
 import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
+import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
-import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 
 @Injectable()
 export class MachinesService {
+  private readonly logger = new Logger(MachinesService.name);
+
   constructor(
     private readonly machinesRepository: MachinesRepository,
     private readonly kepwareService: KepwareService,
@@ -44,8 +48,14 @@ export class MachinesService {
     return { data: machine };
   }
 
-  async findMany(queryDto: QueryMachineDto): Promise<ResponseMachinesDto> {
-    const { data, total } = await this.machinesRepository.query(queryDto);
+  async findMany(
+    queryDto: QueryMachineDto,
+    user: UserPayload,
+  ): Promise<ResponseMachinesDto> {
+    const { data, total } = await this.machinesRepository.query(
+      queryDto,
+      user?.role === 'employee' ? user.email : undefined,
+    );
 
     return {
       data: plainToInstance(MachineDto, data),
@@ -92,5 +102,32 @@ export class MachinesService {
     );
 
     return { data: plainToInstance(MachineDto, machine) };
+  }
+
+  async brokeMachine({
+    serialNumber,
+    version,
+  }: {
+    serialNumber: string;
+    version: number;
+  }) {
+    try {
+      const machine = await this.machinesRepository.findOne(serialNumber);
+
+      if (!machine) {
+        throw new Error('Machine not found');
+      }
+
+      if (machine.version !== version) {
+        throw new Error('Machine version is outdated');
+      }
+
+      await this.machinesRepository.update(serialNumber, {
+        status: 'BROKEN',
+      });
+    } catch (err) {
+      this.logger.error("Couldn't handle broke machine event", err);
+      throw err;
+    }
   }
 }

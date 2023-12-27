@@ -9,6 +9,7 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  text,
 } from 'drizzle-orm/pg-core';
 
 export const PGMachineStatus = pgEnum('status', [
@@ -17,6 +18,8 @@ export const PGMachineStatus = pgEnum('status', [
   'MAINTENANCE',
   'BROKEN',
 ]);
+
+export const PGSchedulePiority = pgEnum('priority', ['HIGH', 'NORMAL', 'LOW']);
 
 export const PGMachine = pgTable(
   'machines',
@@ -83,6 +86,38 @@ export const PGModel = pgTable(
   }),
 );
 
+export const PGMaintenanceSchedule = pgTable(
+  'maintenance_schedules',
+  {
+    id: serial('id').primaryKey(),
+    machineId: integer('machine_id')
+      .notNull()
+      .references(() => PGMachine.id),
+    next: timestamp('next_maintenance', { withTimezone: true }),
+    prev: timestamp('prev_maintenance', { withTimezone: true }),
+    priority: PGSchedulePiority('priority').default('NORMAL'),
+  },
+  (shcedules) => ({
+    scheduleMachineIndex: uniqueIndex('schedule_machine_idx').on(
+      shcedules.machineId,
+    ),
+  }),
+);
+
+export const PGMaintenance = pgTable('maintenances', {
+  id: serial('id').primaryKey(),
+  machineId: integer('machine_id')
+    .notNull()
+    .references(() => PGMachine.id),
+  maintainer: varchar('maintainer'),
+  description: text('description'),
+  date: timestamp('date', { withTimezone: true }).defaultNow(),
+  scheduled: timestamp('scheduled', {
+    withTimezone: true,
+  }),
+  nextMaintenance: timestamp('next_maintenance', { withTimezone: true }),
+});
+
 export const PGProducentsToTypes = pgTable(
   'producents_to_types',
   {
@@ -130,4 +165,5 @@ export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
     fields: [PGMachine.model],
     references: [PGModel.name],
   }),
+  scheduleInfo: one(PGMaintenanceSchedule),
 }));

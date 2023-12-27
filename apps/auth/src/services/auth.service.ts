@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common';
 
 import { UserDto } from '../dto/user.dto';
-import { GOOGLE_TOKEN_INFO } from '../constants/api';
 import { User, UserDocument } from '../schema/user.schema';
 import { LocalSignupPayload } from '../payload/local-signup.payload';
 import { ProviderLoginPayload } from '../payload/provider-login.payload';
+import { GOOGLE_TOKEN_INFO } from '../constants';
 
 @Injectable()
 export class AuthService {
@@ -73,7 +73,9 @@ export class AuthService {
   }
 
   login(user: UserDto) {
-    const accessToken = this.jwtService.sign(instanceToPlain(user));
+    const accessToken = this.jwtService.sign(
+      instanceToPlain(user, { groups: ['auth'] }),
+    );
     return { accessToken, user };
   }
 

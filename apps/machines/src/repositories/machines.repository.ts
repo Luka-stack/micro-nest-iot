@@ -86,8 +86,8 @@ export class MachinesRepository {
     return updated[0];
   }
 
-  async query(queryDto: QueryMachineDto) {
-    const where = this.queryBuilder(queryDto);
+  async query(queryDto: QueryMachineDto, user?: string) {
+    const where = this.queryBuilder(queryDto, user);
 
     const limit = Number(queryDto.limit) || this.defaultLimit;
     const offset = Number(queryDto.offset) || 0;
@@ -122,9 +122,14 @@ export class MachinesRepository {
     };
   }
 
-  queryBuilder(queryDto: QueryMachineDto) {
+  queryBuilder(queryDto: QueryMachineDto, user?: string) {
     const query: SQLWrapper[] = [];
     let tmp: any;
+
+    // TODO Better security / check
+    if (user) {
+      query.push(eq(schema.PGMachine.assignedEmployee, user));
+    }
 
     if (queryDto.serialNumber) {
       query.push(

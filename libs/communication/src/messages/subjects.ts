@@ -8,4 +8,6 @@ export enum KepwareSubjects {
   RegisterWork = 'register:work',
   RegisterUtilization = 'register:utilization',
   RegisterStatusChange = 'register:status_change',
+
+  MachineBroke = 'machine:broke',
 }

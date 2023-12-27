@@ -1,3 +1,10 @@
+import { CurrentUser, JwtAuthGuard, UserPayload } from '@iot/security';
+import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import {
+  KepwareSubjects,
+  MachineBrokeMessage,
+  RmqService,
+} from '@iot/communication';
 import {
   Body,
   Controller,
@@ -6,19 +13,23 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 
 import { MachinesService } from '../services/machines.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
+import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
-import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 
 @Controller('/machines')
 export class MachinesController {
-  constructor(private readonly machinesService: MachinesService) {}
+  constructor(
+    private readonly machinesService: MachinesService,
+    private readonly rmqService: RmqService,
+  ) {}
 
   @Get('/:serialNumber')
   findOne(
@@ -35,10 +46,12 @@ export class MachinesController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findMany(
     @Query() queryMachineDto: QueryMachineDto,
+    @CurrentUser() user: UserPayload,
   ): Promise<ResponseMachinesDto> {
-    return this.machinesService.findMany(queryMachineDto);
+    return this.machinesService.findMany(queryMachineDto, user);
   }
 
   @Patch('/:serialNumber')
@@ -55,5 +68,16 @@ export class MachinesController {
     @Body() employee: AssignEmployeeDto,
   ) {
     return this.machinesService.assignEmployee(serialNumber, employee);
+  }
+
+  @EventPattern(KepwareSubjects.MachineBroke)
+  async brokeMachine(
+    @Payload() data: MachineBrokeMessage['data'],
+    @Ctx() context: RmqContext,
+  ) {
+    try {
+      await this.machinesService.brokeMachine(data);
+      this.rmqService.ack(context);
+    } catch {}
   }
 }

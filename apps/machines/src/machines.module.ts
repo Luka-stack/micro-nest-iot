@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DrizzleModule } from '@iot/database';
+import { SecurityModule } from '@iot/security';
 import { CommunicationModule } from '@iot/communication';
 
 import * as schema from './database/schema';
@@ -11,7 +12,12 @@ import { MiscRepository } from './repositories/misc.repository';
 import { MachinesService } from './services/machines.service';
 import { MachinesController } from './controllers/machines.controller';
 import { MachinesRepository } from './repositories/machines.repository';
-import { KEPWARE_QUEUE, PG_CONNECTION } from './constants';
+import {
+  JWT_EXPIRATION,
+  JWT_SECRET,
+  KEPWARE_QUEUE,
+  PG_CONNECTION,
+} from './constants';
 
 @Module({
   imports: [
@@ -19,7 +25,11 @@ import { KEPWARE_QUEUE, PG_CONNECTION } from './constants';
       isGlobal: true,
       envFilePath: './apps/machines/.env',
     }),
-    CommunicationModule.register({ name: KEPWARE_QUEUE }),
+    SecurityModule.register({
+      secret: JWT_SECRET,
+      expiresInSeconds: JWT_EXPIRATION,
+    }),
+    CommunicationModule.register([{ name: KEPWARE_QUEUE }]),
     DrizzleModule.register({ name: PG_CONNECTION, schema }),
   ],
   controllers: [MachinesController, MiscController],

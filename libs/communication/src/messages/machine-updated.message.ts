@@ -6,6 +6,7 @@ export interface MachineUpdatedMessage {
     serialNumber: string;
     status?: string;
     productionRate?: number;
+    nextMaintenance?: string;
     version: number;
   };
 }

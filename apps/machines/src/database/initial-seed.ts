@@ -1,17 +1,16 @@
+import 'dotenv/config';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import {
   PGMachine,
+  PGMaintenanceSchedule,
   PGModel,
   PGProducent,
   PGProducentsToTypes,
   PGType,
 } from './schema';
 
-const seedClient = postgres(
-  'postgresql://postgres:postgres@localhost:5432/micro_iot_machines',
-  { max: 1 },
-);
+const seedClient = postgres(process.env.DATABASE_URL, { max: 1 });
 const db = drizzle(seedClient);
 
 async function seedMachineDB() {
@@ -83,9 +82,9 @@ async function seedMachineDB() {
       workBase: 10000,
       workRange: 200,
       faultRate: 0.1,
-      minRate: 300,
-      maxRate: 180,
-      defaultRate: 300,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: grabers.id,
     })
@@ -98,9 +97,9 @@ async function seedMachineDB() {
       workBase: 10000,
       workRange: 200,
       faultRate: 0.1,
-      minRate: 240,
-      maxRate: 180,
-      defaultRate: 180,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: grabers.id,
     })
@@ -113,9 +112,9 @@ async function seedMachineDB() {
       workBase: 7000,
       workRange: 100,
       faultRate: 0.1,
-      minRate: 300,
-      maxRate: 180,
-      defaultRate: 300,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: multies.id,
     })
@@ -128,9 +127,9 @@ async function seedMachineDB() {
       workBase: 7000,
       workRange: 100,
       faultRate: 0.1,
-      minRate: 240,
-      maxRate: 60,
-      defaultRate: 180,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: multies.id,
     })
@@ -143,9 +142,9 @@ async function seedMachineDB() {
       workBase: 20000,
       workRange: 500,
       faultRate: 0.1,
-      minRate: 300,
-      maxRate: 180,
-      defaultRate: 300,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: boxers.id,
     })
@@ -158,9 +157,9 @@ async function seedMachineDB() {
       workBase: 20000,
       workRange: 500,
       faultRate: 0.1,
-      minRate: 240,
-      maxRate: 60,
-      defaultRate: 180,
+      minRate: 420,
+      maxRate: 240,
+      defaultRate: 360,
       producentId: fanuc.id,
       typeId: boxers.id,
     })
@@ -172,10 +171,10 @@ async function seedMachineDB() {
       name: 'yaska-alle',
       workBase: 7500,
       workRange: 10,
-      faultRate: 0.1,
-      minRate: 300,
-      maxRate: 240,
-      defaultRate: 240,
+      faultRate: 0.3,
+      minRate: 420,
+      maxRate: 180,
+      defaultRate: 360,
       producentId: yaskawa.id,
       typeId: multies.id,
     })
@@ -187,10 +186,10 @@ async function seedMachineDB() {
       name: 'abb-G10',
       workBase: 12500,
       workRange: 100,
-      faultRate: 0.1,
-      minRate: 240,
-      maxRate: 240,
-      defaultRate: 240,
+      faultRate: 0.2,
+      minRate: 360,
+      maxRate: 120,
+      defaultRate: 300,
       producentId: abb.id,
       typeId: grabers.id,
     })
@@ -202,10 +201,10 @@ async function seedMachineDB() {
       name: 'abb-G12',
       workBase: 12500,
       workRange: 100,
-      faultRate: 0.1,
-      minRate: 60,
-      maxRate: 360,
-      defaultRate: 240,
+      faultRate: 0.2,
+      minRate: 360,
+      maxRate: 120,
+      defaultRate: 300,
       producentId: abb.id,
       typeId: grabers.id,
     })
@@ -217,10 +216,10 @@ async function seedMachineDB() {
       name: 'kawa-sashi',
       workBase: 30000,
       workRange: 1000,
-      faultRate: 0.1,
+      faultRate: 0.25,
       minRate: 360,
-      maxRate: 360,
-      defaultRate: 360,
+      maxRate: 300,
+      defaultRate: 120,
       producentId: kawasaki.id,
       typeId: boxers.id,
     })
@@ -232,10 +231,10 @@ async function seedMachineDB() {
       name: 'kawa-harro',
       workBase: 30000,
       workRange: 1000,
-      faultRate: 0.1,
+      faultRate: 0.25,
       minRate: 360,
-      maxRate: 180,
-      defaultRate: 300,
+      maxRate: 300,
+      defaultRate: 120,
       producentId: kawasaki.id,
       typeId: boxers.id,
     })
@@ -435,6 +434,133 @@ async function seedMachineDB() {
       type: boxers.name,
       model: kawaHarro[0].name,
       version: 1,
+    },
+  ]);
+
+  const nextMonth = new Date();
+  nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+  // Create Schedules
+  await db.insert(PGMaintenanceSchedule).values([
+    {
+      machineId: 1,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 2,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 3,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 4,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 5,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 6,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 7,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 8,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 9,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 10,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 11,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 12,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 13,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 14,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 15,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 16,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 17,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 18,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 19,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 20,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 21,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 22,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 23,
+      prev: new Date(),
+      next: nextMonth,
+    },
+    {
+      machineId: 24,
+      prev: new Date(),
+      next: nextMonth,
     },
   ]);
 
