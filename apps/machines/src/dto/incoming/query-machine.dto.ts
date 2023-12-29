@@ -45,4 +45,12 @@ export class QueryMachineDto extends QueryPaginationDto {
   @IsOptional()
   @IsFilter()
   startedAtFilter?: string;
+
+  @IsOptional()
+  @IsString()
+  employee?: string;
+
+  @IsOptional()
+  @IsString()
+  maintainer?: string;
 }

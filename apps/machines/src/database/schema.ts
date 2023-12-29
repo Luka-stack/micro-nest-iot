@@ -10,6 +10,7 @@ import {
   uniqueIndex,
   varchar,
   text,
+  index,
 } from 'drizzle-orm/pg-core';
 
 export const PGMachineStatus = pgEnum('status', [
@@ -17,9 +18,15 @@ export const PGMachineStatus = pgEnum('status', [
   'WORKING',
   'MAINTENANCE',
   'BROKEN',
+  'UNDER_MAINTENANCE',
 ]);
 
 export const PGSchedulePiority = pgEnum('priority', ['HIGH', 'NORMAL', 'LOW']);
+
+export const PGMaintenanceType = pgEnum('maintenance_type', [
+  'MAINTENANCE',
+  'REPAIR',
+]);
 
 export const PGMachine = pgTable(
   'machines',
@@ -35,14 +42,27 @@ export const PGMachine = pgTable(
     type: varchar('type', { length: 50 }),
     model: varchar('model', { length: 50 }),
     assignedEmployee: varchar('assigned_employee').default(null),
+    assignedMaintainer: varchar('assigned_maintainer').default(null),
     version: integer('version'),
   },
   (machines) => ({
     serialNumberIndex: uniqueIndex('serial_number_idx').on(
       machines.serialNumber,
     ),
+    employeeIndex: index('employee_idx').on(machines.assignedEmployee),
+    maintainerIndex: index('maintainer_idx').on(machines.assignedMaintainer),
   }),
 );
+
+export const PGMachineMaintainInfo = pgTable('machine_maintain_info', {
+  id: serial('id').primaryKey(),
+  notes: text('notes'),
+  machineId: integer('machine_id')
+    .notNull()
+    .references(() => PGMachine.id),
+  maintenance: timestamp('next_maintenance', { withTimezone: true }),
+  priority: PGSchedulePiority('priority').default('NORMAL'),
+});
 
 export const PGProducent = pgTable(
   'producents',
@@ -86,25 +106,7 @@ export const PGModel = pgTable(
   }),
 );
 
-export const PGMaintenanceSchedule = pgTable(
-  'maintenance_schedules',
-  {
-    id: serial('id').primaryKey(),
-    machineId: integer('machine_id')
-      .notNull()
-      .references(() => PGMachine.id),
-    next: timestamp('next_maintenance', { withTimezone: true }),
-    prev: timestamp('prev_maintenance', { withTimezone: true }),
-    priority: PGSchedulePiority('priority').default('NORMAL'),
-  },
-  (shcedules) => ({
-    scheduleMachineIndex: uniqueIndex('schedule_machine_idx').on(
-      shcedules.machineId,
-    ),
-  }),
-);
-
-export const PGMaintenance = pgTable('maintenances', {
+export const PGMaintenanceHistory = pgTable('maintenanc_history', {
   id: serial('id').primaryKey(),
   machineId: integer('machine_id')
     .notNull()
@@ -112,6 +114,7 @@ export const PGMaintenance = pgTable('maintenances', {
   maintainer: varchar('maintainer'),
   description: text('description'),
   date: timestamp('date', { withTimezone: true }).defaultNow(),
+  type: varchar('type'),
   scheduled: timestamp('scheduled', {
     withTimezone: true,
   }),
@@ -165,5 +168,9 @@ export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
     fields: [PGMachine.model],
     references: [PGModel.name],
   }),
-  scheduleInfo: one(PGMaintenanceSchedule),
+  maintainInfo: one(PGMachineMaintainInfo, {
+    references: [PGMachineMaintainInfo.machineId],
+    fields: [PGMachine.id],
+  }),
+  maintenances: one(PGMaintenanceHistory),
 }));

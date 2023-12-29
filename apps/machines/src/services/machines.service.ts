@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import { MachineDto } from '../dto/machine.dto';
+import { MACHINE_STATUS } from '../app.types';
 import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
@@ -27,12 +28,7 @@ export class MachinesService {
   ) {}
 
   async findOne(serialNumber: string): Promise<ResponseMachineDto> {
-    const machine = await this.machinesRepository.findOne(serialNumber);
-
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
-
+    const machine = await this.machinesRepository.findOne(serialNumber, false);
     return { data: plainToInstance(MachineDto, machine) };
   }
 
@@ -52,10 +48,9 @@ export class MachinesService {
     queryDto: QueryMachineDto,
     user: UserPayload,
   ): Promise<ResponseMachinesDto> {
-    const { data, total } = await this.machinesRepository.query(
-      queryDto,
-      user?.role === 'employee' ? user.email : undefined,
-    );
+    const filters = this.sanitizeFilters(queryDto, user);
+
+    const { data, total } = await this.machinesRepository.query(filters);
 
     return {
       data: plainToInstance(MachineDto, data),
@@ -76,29 +71,41 @@ export class MachinesService {
       throw new BadRequestException('At least one field must change');
     }
 
-    try {
-      const machine = await this.machinesRepository.update(
-        serialNumber,
-        machineDto,
-      );
-
-      this.kepwareService.emitMachineUpdated({
-        serialNumber: machine.serialNumber,
-        version: machine.version,
-        status: machineDto.status,
-        productionRate: machineDto.productionRate,
-      });
-
-      return { data: plainToInstance(MachineDto, machine) };
-    } catch (err) {
-      throw err;
+    if (
+      machineDto.status !== MACHINE_STATUS.IDLE &&
+      machineDto.status !== MACHINE_STATUS.WORKING
+    ) {
+      throw new BadRequestException('You cannot change machine status');
     }
+
+    const machine = await this.machinesRepository.update(
+      serialNumber,
+      machineDto,
+    );
+
+    this.kepwareService.emitMachineUpdated({
+      serialNumber: machine.serialNumber,
+      version: machine.version,
+      status: machineDto.status,
+      productionRate: machineDto.productionRate,
+    });
+
+    return { data: plainToInstance(MachineDto, machine) };
   }
 
   async assignEmployee(serialNumber: string, employee: AssignEmployeeDto) {
     const machine = await this.machinesRepository.assignEmployee(
       serialNumber,
       employee.employee || null,
+    );
+
+    return { data: plainToInstance(MachineDto, machine) };
+  }
+
+  async assignMaintainer(serialNumber: string, maintainer: string) {
+    const machine = await this.machinesRepository.assignMaintainer(
+      serialNumber,
+      maintainer,
     );
 
     return { data: plainToInstance(MachineDto, machine) };
@@ -112,11 +119,7 @@ export class MachinesService {
     version: number;
   }) {
     try {
-      const machine = await this.machinesRepository.findOne(serialNumber);
-
-      if (!machine) {
-        throw new Error('Machine not found');
-      }
+      const machine = await this.machinesRepository.findOne(serialNumber, true);
 
       if (machine.version !== version) {
         throw new Error('Machine version is outdated');
@@ -129,5 +132,20 @@ export class MachinesService {
       this.logger.error("Couldn't handle broke machine event", err);
       throw err;
     }
+  }
+
+  sanitizeFilters(queryDto: QueryMachineDto, user: UserPayload) {
+    if (user?.role === 'employee') {
+      queryDto.employee = user.email;
+      delete queryDto.maintainer;
+    } else if (user?.role === 'maintainer') {
+      if (queryDto.maintainer) {
+        queryDto.maintainer = user.email;
+      }
+
+      delete queryDto.employee;
+    }
+
+    return queryDto;
   }
 }

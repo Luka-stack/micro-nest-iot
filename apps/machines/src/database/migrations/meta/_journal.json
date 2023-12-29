@@ -15,6 +15,13 @@
       "when": 1703688100533,
       "tag": "0001_breezy_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1703802390241,
+      "tag": "0002_chemical_korath",
+      "breakpoints": true
     }
   ]
 }

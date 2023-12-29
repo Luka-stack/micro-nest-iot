@@ -1,5 +1,10 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   SQLWrapper,
   and,
@@ -7,6 +12,7 @@ import {
   gt,
   gte,
   inArray,
+  isNull,
   like,
   lt,
   lte,
@@ -15,6 +21,7 @@ import {
 
 import * as schema from '../database/schema';
 import { PG_CONNECTION } from '../constants';
+import { MACHINE_STATUS } from '../app.types';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
 
@@ -27,11 +34,39 @@ export class MachinesRepository {
     private readonly conn: PostgresJsDatabase<typeof schema>,
   ) {}
 
-  findOne(serialNumber: string) {
-    return this.conn.query.PGMachine.findFirst({
+  async findOne(serialNumber: string, plain: boolean) {
+    if (plain) {
+      const machine = await this.conn.query.PGMachine.findFirst({
+        where: eq(schema.PGMachine.serialNumber, serialNumber),
+      });
+
+      if (!machine) {
+        throw new NotFoundException('Machine not found');
+      }
+
+      return machine;
+    }
+
+    const machine = await this.conn.query.PGMachine.findFirst({
       where: eq(schema.PGMachine.serialNumber, serialNumber),
-      with: { model: true, type: true },
+      with: {
+        model: true,
+        type: true,
+        maintainInfo: {
+          columns: {
+            notes: true,
+            priority: true,
+            maintenance: true,
+          },
+        },
+      },
     });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    return machine;
   }
 
   findStatus(serialNumber: string) {
@@ -48,6 +83,13 @@ export class MachinesRepository {
 
     if (!machine) {
       throw new NotFoundException('Machine not found');
+    }
+
+    if (
+      machineDto.status !== MACHINE_STATUS.IDLE &&
+      machineDto.status !== MACHINE_STATUS.WORKING
+    ) {
+      throw new BadRequestException('You cannot change machine status');
     }
 
     const data: Partial<typeof machine> = {
@@ -86,8 +128,29 @@ export class MachinesRepository {
     return updated[0];
   }
 
-  async query(queryDto: QueryMachineDto, user?: string) {
-    const where = this.queryBuilder(queryDto, user);
+  async assignMaintainer(serialNumber: string, maintainer: string) {
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: and(
+        eq(schema.PGMachine.serialNumber, serialNumber),
+        isNull(schema.PGMachine.assignedMaintainer),
+      ),
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    const updated = await this.conn
+      .update(schema.PGMachine)
+      .set({ assignedMaintainer: maintainer })
+      .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning();
+
+    return updated[0];
+  }
+
+  async query(queryDto: QueryMachineDto) {
+    const where = this.queryBuilder(queryDto);
 
     const limit = Number(queryDto.limit) || this.defaultLimit;
     const offset = Number(queryDto.offset) || 0;
@@ -99,6 +162,13 @@ export class MachinesRepository {
       with: {
         type: true,
         model: true,
+        maintainInfo: {
+          columns: {
+            notes: true,
+            priority: true,
+            maintenance: true,
+          },
+        },
       },
       orderBy: schema.PGMachine.serialNumber,
     }).prepare('query_machines');
@@ -122,13 +192,16 @@ export class MachinesRepository {
     };
   }
 
-  queryBuilder(queryDto: QueryMachineDto, user?: string) {
+  queryBuilder(queryDto: QueryMachineDto) {
     const query: SQLWrapper[] = [];
     let tmp: any;
 
-    // TODO Better security / check
-    if (user) {
-      query.push(eq(schema.PGMachine.assignedEmployee, user));
+    if (queryDto.employee) {
+      query.push(eq(schema.PGMachine.assignedEmployee, queryDto.employee));
+    }
+
+    if (queryDto.maintainer) {
+      query.push(eq(schema.PGMachine.assignedMaintainer, queryDto.maintainer));
     }
 
     if (queryDto.serialNumber) {
