@@ -200,8 +200,11 @@ export class MachinesRepository {
       query.push(eq(schema.PGMachine.assignedEmployee, queryDto.employee));
     }
 
+    // TODO cannot be like that
     if (queryDto.maintainer) {
       query.push(eq(schema.PGMachine.assignedMaintainer, queryDto.maintainer));
+    } else {
+      query.push(isNull(schema.PGMachine.assignedMaintainer));
     }
 
     if (queryDto.serialNumber) {

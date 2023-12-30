@@ -102,10 +102,10 @@ export class MachinesService {
     return { data: plainToInstance(MachineDto, machine) };
   }
 
-  async assignMaintainer(serialNumber: string, maintainer: string) {
+  async assignMaintainer(serialNumber: string, user: UserPayload) {
     const machine = await this.machinesRepository.assignMaintainer(
       serialNumber,
-      maintainer,
+      user.email,
     );
 
     return { data: plainToInstance(MachineDto, machine) };
@@ -140,6 +140,8 @@ export class MachinesService {
       delete queryDto.maintainer;
     } else if (user?.role === 'maintainer') {
       if (queryDto.maintainer) {
+        delete queryDto.maintainer;
+      } else {
         queryDto.maintainer = user.email;
       }
 

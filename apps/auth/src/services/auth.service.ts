@@ -107,7 +107,9 @@ export class AuthService {
     const user = plainToInstance(UserDto, dbUser.toObject(), {
       groups: ['auth'],
     });
-    const accessToken = this.jwtService.sign(instanceToPlain(user));
+    const accessToken = this.jwtService.sign(
+      instanceToPlain(user, { groups: ['auth'] }),
+    );
 
     return { accessToken, user, newUser };
   }

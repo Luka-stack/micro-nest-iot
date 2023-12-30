@@ -1,5 +1,11 @@
-import { CurrentUser, JwtAuthGuard, UserPayload } from '@iot/security';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  Roles,
+  USER_ROLES,
+  UserPayload,
+} from '@iot/security';
 import {
   KepwareSubjects,
   MachineBrokeMessage,
@@ -63,11 +69,21 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/assign-employee')
-  assign(
+  assignEmployee(
     @Param('serialNumber') serialNumber: string,
     @Body() employee: AssignEmployeeDto,
   ) {
     return this.machinesService.assignEmployee(serialNumber, employee);
+  }
+
+  @Post('/:serialNumber/assign-maintainer')
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.MAINTAINER)
+  assignMaintainer(
+    @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.machinesService.assignMaintainer(serialNumber, user);
   }
 
   @EventPattern(KepwareSubjects.MachineBroke)
