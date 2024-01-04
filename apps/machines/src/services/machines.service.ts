@@ -5,10 +5,11 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 import { MachineDto } from '../dto/machine.dto';
-import { MACHINE_STATUS } from '../app.types';
+import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
 import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
@@ -17,9 +18,15 @@ import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
+import { Machine } from '../bos/machine';
 
 @Injectable()
 export class MachinesService {
+  private static readonly EMPLOYEE_AVAIABLE_STATUS: string[] = [
+    MACHINE_STATUS.IDLE,
+    MACHINE_STATUS.WORKING,
+  ];
+
   private readonly logger = new Logger(MachinesService.name);
 
   constructor(
@@ -66,21 +73,20 @@ export class MachinesService {
   async update(
     serialNumber: string,
     machineDto: UpdateMachineDto,
+    user: UserPayload,
   ): Promise<ResponseMachineDto> {
-    if (!machineDto.productionRate && !machineDto.status) {
-      throw new BadRequestException('At least one field must change');
+    const machine = await this.machinesRepository.findOne(serialNumber, true);
+
+    if (!machineDto.status && !machineDto.productionRate) {
+      return { data: plainToInstance(MachineDto, machine) };
     }
 
-    if (
-      machineDto.status !== MACHINE_STATUS.IDLE &&
-      machineDto.status !== MACHINE_STATUS.WORKING
-    ) {
-      throw new BadRequestException('You cannot change machine status');
-    }
+    this.validateUpdateAccess(user, machine, machineDto.status);
 
-    const machine = await this.machinesRepository.update(
+    const updatedMachine = await this.machinesRepository.update(
       serialNumber,
       machineDto,
+      machine.version + 1,
     );
 
     this.kepwareService.emitMachineUpdated({
@@ -90,7 +96,7 @@ export class MachinesService {
       productionRate: machineDto.productionRate,
     });
 
-    return { data: plainToInstance(MachineDto, machine) };
+    return { data: plainToInstance(MachineDto, updatedMachine) };
   }
 
   async assignEmployee(serialNumber: string, employee: AssignEmployeeDto) {
@@ -125,29 +131,76 @@ export class MachinesService {
         throw new Error('Machine version is outdated');
       }
 
-      await this.machinesRepository.update(serialNumber, {
-        status: 'BROKEN',
-      });
+      await this.machinesRepository.update(
+        serialNumber,
+        {
+          status: 'BROKEN',
+        },
+        machine.version + 1,
+      );
     } catch (err) {
       this.logger.error("Couldn't handle broke machine event", err);
       throw err;
     }
   }
 
-  sanitizeFilters(queryDto: QueryMachineDto, user: UserPayload) {
+  private sanitizeFilters(queryDto: QueryMachineDto, user: UserPayload) {
     if (user?.role === 'employee') {
       queryDto.employee = user.email;
       delete queryDto.maintainer;
     } else if (user?.role === 'maintainer') {
       if (queryDto.maintainer) {
-        delete queryDto.maintainer;
-      } else {
         queryDto.maintainer = user.email;
+      } else {
+        queryDto.maintainer = NOT_ASSIGNED;
       }
 
       delete queryDto.employee;
     }
 
     return queryDto;
+  }
+
+  private validateUpdateAccess(
+    user: UserPayload,
+    machine: Machine,
+    newStatus?: string,
+  ) {
+    if (user.role === 'administrator') {
+      return;
+    }
+
+    if (user.role === 'employee') {
+      if (machine.assignedEmployee !== user.email) {
+        throw new UnauthorizedException('You cannot update this machine');
+      }
+
+      if (!MachinesService.EMPLOYEE_AVAIABLE_STATUS.includes(machine.status)) {
+        throw new BadRequestException(
+          'You cannot change machine while broke or maintenance',
+        );
+      }
+
+      if (
+        newStatus &&
+        !MachinesService.EMPLOYEE_AVAIABLE_STATUS.includes(newStatus)
+      ) {
+        throw new BadRequestException('Invalid status');
+      }
+
+      return;
+    }
+
+    if (user.role === 'maintainer') {
+      if (machine.assignedMaintainer !== user.email) {
+        throw new UnauthorizedException('You cannot update this machine');
+      }
+
+      if (newStatus === MACHINE_STATUS.WORKING) {
+        throw new BadRequestException('Invalid status');
+      }
+
+      return;
+    }
   }
 }

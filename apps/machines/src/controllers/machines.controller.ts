@@ -61,11 +61,13 @@ export class MachinesController {
   }
 
   @Patch('/:serialNumber')
+  @UseGuards(JwtAuthGuard)
   update(
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
+    @CurrentUser() user: UserPayload,
   ): Promise<ResponseMachineDto> {
-    return this.machinesService.update(serialNumber, updateMachineDto);
+    return this.machinesService.update(serialNumber, updateMachineDto, user);
   }
 
   @Post('/:serialNumber/assign-employee')

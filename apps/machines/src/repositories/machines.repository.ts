@@ -1,10 +1,5 @@
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   SQLWrapper,
   and,
@@ -21,9 +16,10 @@ import {
 
 import * as schema from '../database/schema';
 import { PG_CONNECTION } from '../constants';
-import { MACHINE_STATUS } from '../app.types';
+import { NOT_ASSIGNED } from '../app.types';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
+import { Machine } from '../bos/machine';
 
 @Injectable()
 export class MachinesRepository {
@@ -76,25 +72,14 @@ export class MachinesRepository {
     });
   }
 
-  async update(serialNumber: string, machineDto: UpdateMachineDto) {
-    const machine = await this.conn.query.PGMachine.findFirst({
-      where: eq(schema.PGMachine.serialNumber, serialNumber),
-    });
-
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
-
-    if (
-      machineDto.status !== MACHINE_STATUS.IDLE &&
-      machineDto.status !== MACHINE_STATUS.WORKING
-    ) {
-      throw new BadRequestException('You cannot change machine status');
-    }
-
-    const data: Partial<typeof machine> = {
+  async update(
+    serialNumber: string,
+    machineDto: UpdateMachineDto,
+    newVersion: number,
+  ) {
+    const data: Partial<Machine> = {
       ...machineDto,
-      version: machine.version + 1,
+      version: newVersion,
     };
 
     if (machineDto.status) {
@@ -197,14 +182,21 @@ export class MachinesRepository {
     let tmp: any;
 
     if (queryDto.employee) {
-      query.push(eq(schema.PGMachine.assignedEmployee, queryDto.employee));
+      if (queryDto.employee === NOT_ASSIGNED) {
+        query.push(isNull(schema.PGMachine.assignedEmployee));
+      } else {
+        query.push(eq(schema.PGMachine.assignedEmployee, queryDto.employee));
+      }
     }
 
-    // TODO cannot be like that
     if (queryDto.maintainer) {
-      query.push(eq(schema.PGMachine.assignedMaintainer, queryDto.maintainer));
-    } else {
-      query.push(isNull(schema.PGMachine.assignedMaintainer));
+      if (queryDto.maintainer === NOT_ASSIGNED) {
+        query.push(isNull(schema.PGMachine.assignedMaintainer));
+      } else {
+        query.push(
+          eq(schema.PGMachine.assignedMaintainer, queryDto.maintainer),
+        );
+      }
     }
 
     if (queryDto.serialNumber) {

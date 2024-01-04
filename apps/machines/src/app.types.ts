@@ -1,3 +1,5 @@
+export const NOT_ASSIGNED = 'Unassigned' as const;
+
 export const MACHINE_STATUS = {
   IDLE: 'IDLE',
   WORKING: 'WORKING',
