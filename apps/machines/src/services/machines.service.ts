@@ -18,7 +18,8 @@ import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
-import { Machine } from '../bos/machine';
+import { Machine, MaintainInfo } from '../bos/machine';
+import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 
 @Injectable()
 export class MachinesService {
@@ -83,6 +84,16 @@ export class MachinesService {
 
     this.validateUpdateAccess(user, machine, machineDto.status);
 
+    if (
+      (machineDto.status &&
+        machineDto.status === MACHINE_STATUS.WORKING &&
+        machineDto.status !== MACHINE_STATUS.WORKING) ||
+      (machineDto.status !== MACHINE_STATUS.WORKING &&
+        machine.status === MACHINE_STATUS.WORKING)
+    ) {
+      (machineDto as any).lastStatusUpdate = new Date();
+    }
+
     const updatedMachine = await this.machinesRepository.update(
       serialNumber,
       machineDto,
@@ -97,6 +108,32 @@ export class MachinesService {
     });
 
     return { data: plainToInstance(MachineDto, updatedMachine) };
+  }
+
+  async reportDefect(serialNumber: string, notes: string) {
+    const machine = await this.machinesRepository.findOne(serialNumber, true);
+
+    const updatedInfo = await this.machinesRepository.updateMaintainInfo(
+      machine.id,
+      {
+        notes,
+      },
+    );
+
+    return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
+  }
+
+  async changePriority(serialNumber: string, priority: string) {
+    const machine = await this.machinesRepository.findOne(serialNumber, true);
+
+    const updatedInfo = await this.machinesRepository.updateMaintainInfo(
+      machine.id,
+      {
+        priority: priority as MaintainInfo['priority'],
+      },
+    );
+
+    return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
   }
 
   async assignEmployee(serialNumber: string, employee: AssignEmployeeDto) {
@@ -179,13 +216,6 @@ export class MachinesService {
         throw new BadRequestException(
           'You cannot change machine while broke or maintenance',
         );
-      }
-
-      if (
-        newStatus &&
-        !MachinesService.EMPLOYEE_AVAIABLE_STATUS.includes(newStatus)
-      ) {
-        throw new BadRequestException('Invalid status');
       }
 
       return;

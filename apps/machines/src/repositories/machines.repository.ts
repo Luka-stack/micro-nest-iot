@@ -18,8 +18,7 @@ import * as schema from '../database/schema';
 import { PG_CONNECTION } from '../constants';
 import { NOT_ASSIGNED } from '../app.types';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
-import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
-import { Machine } from '../bos/machine';
+import { Machine, MaintainInfo } from '../bos/machine';
 
 @Injectable()
 export class MachinesRepository {
@@ -74,22 +73,31 @@ export class MachinesRepository {
 
   async update(
     serialNumber: string,
-    machineDto: UpdateMachineDto,
+    machineData: Partial<Machine>,
     newVersion: number,
   ) {
     const data: Partial<Machine> = {
-      ...machineDto,
+      ...machineData,
       version: newVersion,
     };
-
-    if (machineDto.status) {
-      data.lastStatusUpdate = new Date();
-    }
 
     const updated = await this.conn
       .update(schema.PGMachine)
       .set(data)
       .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning();
+
+    return updated[0];
+  }
+
+  async updateMaintainInfo(
+    machineId: number,
+    maintainInfo: Partial<MaintainInfo>,
+  ) {
+    const updated = await this.conn
+      .update(schema.PGMachineMaintainInfo)
+      .set(maintainInfo)
+      .where(eq(schema.PGMachineMaintainInfo.machineId, machineId))
       .returning();
 
     return updated[0];

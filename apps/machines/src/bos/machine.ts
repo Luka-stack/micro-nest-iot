@@ -1,5 +1,6 @@
 import { InferSelectModel } from 'drizzle-orm';
 
-import { PGMachine } from '../database/schema';
+import { PGMachine, PGMachineMaintainInfo } from '../database/schema';
 
 export type Machine = InferSelectModel<typeof PGMachine>;
+export type MaintainInfo = InferSelectModel<typeof PGMachineMaintainInfo>;

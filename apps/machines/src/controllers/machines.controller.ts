@@ -78,6 +78,22 @@ export class MachinesController {
     return this.machinesService.assignEmployee(serialNumber, employee);
   }
 
+  @Post('/:serialNumber/report-defect')
+  reportDefect(
+    @Param('serialNumber') serialNumber: string,
+    @Body('notes') notes: string,
+  ) {
+    return this.machinesService.reportDefect(serialNumber, notes);
+  }
+
+  @Post('/:serialNumber/priority')
+  changePriority(
+    @Param('serialNumber') serialNumber: string,
+    @Body('priority') priority: string,
+  ) {
+    return this.machinesService.changePriority(serialNumber, priority);
+  }
+
   @Post('/:serialNumber/assign-maintainer')
   @UseGuards(JwtAuthGuard)
   @Roles(USER_ROLES.MAINTAINER)
