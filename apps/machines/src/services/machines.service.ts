@@ -8,8 +8,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { MachineDto } from '../dto/machine.dto';
-import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
 import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
@@ -17,9 +15,11 @@ import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
-import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
+import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
+import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
+import { MachineDto, MachineWithHistoryDto } from '../dto/machine.dto';
 
 @Injectable()
 export class MachinesService {
@@ -69,6 +69,21 @@ export class MachinesService {
         total: total,
       },
     };
+  }
+
+  async findMachineHistory(serialNumber: string, user: UserPayload) {
+    const machine =
+      await this.machinesRepository.findMachineWithHistory(serialNumber);
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    if (user.role === 'employee' && machine.assignedEmployee !== user.email) {
+      throw new UnauthorizedException('You cannot view this machine history');
+    }
+
+    return { data: plainToInstance(MachineWithHistoryDto, machine) };
   }
 
   async update(

@@ -2,9 +2,10 @@ import { Exclude, plainToInstance, Transform } from 'class-transformer';
 
 import { MachineTypeDto } from './machine-type.dto';
 import { MachineModelDto } from './machine-model.dto';
+import { MachineHistoryDto } from './machine-history.dto';
 import { MachineMaintainInfoDto } from './machine-maintain-info.dto';
 
-export class MachineDto {
+class BaseDto {
   @Exclude()
   id: number;
 
@@ -21,7 +22,9 @@ export class MachineDto {
   assignedMaintainer: string;
 
   producent: string;
+}
 
+export class MachineDto extends BaseDto {
   @Transform(({ value }) => plainToInstance(MachineTypeDto, value))
   type: MachineTypeDto;
 
@@ -35,4 +38,9 @@ export class MachineDto {
 
   @Exclude()
   version: number;
+}
+
+export class MachineWithHistoryDto extends BaseDto {
+  @Transform(({ value }) => plainToInstance(MachineHistoryDto, value))
+  maintenances: MachineHistoryDto;
 }

@@ -23,10 +23,10 @@ export const PGMachineStatus = pgEnum('status', [
 
 export const PGSchedulePiority = pgEnum('priority', ['HIGH', 'NORMAL', 'LOW']);
 
-export const PGMaintenanceType = pgEnum('maintenance_type', [
-  'MAINTENANCE',
-  'REPAIR',
-]);
+// export const PGMaintenanceType = pgEnum('maintenance_type', [
+//   'MAINTENANCE',
+//   'REPAIR',
+// ]);
 
 export const PGMachine = pgTable(
   'machines',

@@ -29,6 +29,15 @@ export class MachinesRepository {
     private readonly conn: PostgresJsDatabase<typeof schema>,
   ) {}
 
+  findMachineWithHistory(serialNumber: string) {
+    return this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+      with: {
+        maintenances: true,
+      },
+    });
+  }
+
   async findOne(serialNumber: string, plain: boolean) {
     if (plain) {
       const machine = await this.conn.query.PGMachine.findFirst({

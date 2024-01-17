@@ -60,6 +60,15 @@ export class MachinesController {
     return this.machinesService.findMany(queryMachineDto, user);
   }
 
+  @Get('/:serialNumber/history')
+  @UseGuards(JwtAuthGuard)
+  async findMachineHistory(
+    @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.machinesService.findMachineHistory(serialNumber, user);
+  }
+
   @Patch('/:serialNumber')
   @UseGuards(JwtAuthGuard)
   update(
