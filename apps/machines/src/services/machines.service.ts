@@ -3,6 +3,7 @@ import { plainToInstance } from 'class-transformer';
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   UnauthorizedException,
@@ -19,7 +20,7 @@ import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
-import { MachineDto, MachineWithHistoryDto } from '../dto/machine.dto';
+import { MachineDto } from '../dto/machine.dto';
 
 @Injectable()
 export class MachinesService {
@@ -36,7 +37,11 @@ export class MachinesService {
   ) {}
 
   async findOne(serialNumber: string): Promise<ResponseMachineDto> {
-    const machine = await this.machinesRepository.findOne(serialNumber, false);
+    const machine = await this.machinesRepository.findOne(serialNumber, {
+      model: true,
+      type: true,
+      maintainInfo: true,
+    });
     return { data: plainToInstance(MachineDto, machine) };
   }
 
@@ -72,8 +77,12 @@ export class MachinesService {
   }
 
   async findMachineHistory(serialNumber: string, user: UserPayload) {
-    const machine =
-      await this.machinesRepository.findMachineWithHistory(serialNumber);
+    const machine = await this.machinesRepository.findOne(serialNumber, {
+      maintainInfo: true,
+      model: true,
+      type: true,
+      maintenances: true,
+    });
 
     if (!machine) {
       throw new NotFoundException('Machine not found');
@@ -83,7 +92,7 @@ export class MachinesService {
       throw new UnauthorizedException('You cannot view this machine history');
     }
 
-    return { data: plainToInstance(MachineWithHistoryDto, machine) };
+    return { data: plainToInstance(MachineDto, machine) };
   }
 
   async update(
@@ -91,7 +100,7 @@ export class MachinesService {
     machineDto: UpdateMachineDto,
     user: UserPayload,
   ): Promise<ResponseMachineDto> {
-    const machine = await this.machinesRepository.findOne(serialNumber, true);
+    const machine = await this.machinesRepository.findOne(serialNumber);
 
     if (!machineDto.status && !machineDto.productionRate) {
       return { data: plainToInstance(MachineDto, machine) };
@@ -125,13 +134,35 @@ export class MachinesService {
     return { data: plainToInstance(MachineDto, updatedMachine) };
   }
 
-  async reportDefect(serialNumber: string, notes: string) {
-    const machine = await this.machinesRepository.findOne(serialNumber, true);
+  async addDefect(serialNumber: string, defect: string) {
+    const machine =
+      await this.machinesRepository.findMachineMaintainInfo(serialNumber);
+
+    const defects = machine.defects || [];
+    defects.push(defect);
 
     const updatedInfo = await this.machinesRepository.updateMaintainInfo(
       machine.id,
       {
-        notes,
+        defects,
+      },
+    );
+
+    return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
+  }
+
+  async deleteDefect(serialNumber: string, defect: string) {
+    const machine =
+      await this.machinesRepository.findMachineMaintainInfo(serialNumber);
+
+    const defects = machine.defects
+      ? machine.defects.filter((d) => d !== defect)
+      : [];
+
+    const updatedInfo = await this.machinesRepository.updateMaintainInfo(
+      machine.id,
+      {
+        defects,
       },
     );
 
@@ -139,7 +170,7 @@ export class MachinesService {
   }
 
   async changePriority(serialNumber: string, priority: string) {
-    const machine = await this.machinesRepository.findOne(serialNumber, true);
+    const machine = await this.machinesRepository.findOne(serialNumber);
 
     const updatedInfo = await this.machinesRepository.updateMaintainInfo(
       machine.id,
@@ -169,6 +200,19 @@ export class MachinesService {
     return { data: plainToInstance(MachineDto, machine) };
   }
 
+  async unassignMaintainer(serialNumber: string, user: UserPayload) {
+    try {
+      await this.machinesRepository.unassignMaintainer(
+        serialNumber,
+        user.email,
+      );
+    } catch (error) {
+      this.logger.error("Couldn't unassign maintainer", error);
+
+      throw new InternalServerErrorException('Internal server error');
+    }
+  }
+
   async brokeMachine({
     serialNumber,
     version,
@@ -177,7 +221,7 @@ export class MachinesService {
     version: number;
   }) {
     try {
-      const machine = await this.machinesRepository.findOne(serialNumber, true);
+      const machine = await this.machinesRepository.findOne(serialNumber);
 
       if (machine.version !== version) {
         throw new Error('Machine version is outdated');
@@ -202,9 +246,9 @@ export class MachinesService {
       delete queryDto.maintainer;
     } else if (user?.role === 'maintainer') {
       if (queryDto.maintainer) {
-        queryDto.maintainer = user.email;
-      } else {
         queryDto.maintainer = NOT_ASSIGNED;
+      } else {
+        queryDto.maintainer = user.email;
       }
 
       delete queryDto.employee;

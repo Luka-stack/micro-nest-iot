@@ -22,6 +22,13 @@
       "when": 1703802390241,
       "tag": "0002_chemical_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1705695777272,
+      "tag": "0003_flowery_stark_industries",
+      "breakpoints": true
     }
   ]
 }

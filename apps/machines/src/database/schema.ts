@@ -11,6 +11,7 @@ import {
   varchar,
   text,
   index,
+  json,
 } from 'drizzle-orm/pg-core';
 
 export const PGMachineStatus = pgEnum('status', [
@@ -22,11 +23,6 @@ export const PGMachineStatus = pgEnum('status', [
 ]);
 
 export const PGSchedulePiority = pgEnum('priority', ['HIGH', 'NORMAL', 'LOW']);
-
-// export const PGMaintenanceType = pgEnum('maintenance_type', [
-//   'MAINTENANCE',
-//   'REPAIR',
-// ]);
 
 export const PGMachine = pgTable(
   'machines',
@@ -56,7 +52,7 @@ export const PGMachine = pgTable(
 
 export const PGMachineMaintainInfo = pgTable('machine_maintain_info', {
   id: serial('id').primaryKey(),
-  notes: text('notes'),
+  defects: json('defects').$type<string[]>(),
   machineId: integer('machine_id')
     .notNull()
     .references(() => PGMachine.id),
@@ -106,7 +102,7 @@ export const PGModel = pgTable(
   }),
 );
 
-export const PGMaintenanceHistory = pgTable('maintenanc_history', {
+export const PGMaintenanceHistory = pgTable('maintenance_history', {
   id: serial('id').primaryKey(),
   machineId: integer('machine_id')
     .notNull()
@@ -172,5 +168,8 @@ export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
     references: [PGMachineMaintainInfo.machineId],
     fields: [PGMachine.id],
   }),
-  maintenances: one(PGMaintenanceHistory),
+  maintenances: one(PGMaintenanceHistory, {
+    references: [PGMaintenanceHistory.machineId],
+    fields: [PGMachine.id],
+  }),
 }));

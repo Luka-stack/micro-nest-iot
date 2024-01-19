@@ -87,12 +87,20 @@ export class MachinesController {
     return this.machinesService.assignEmployee(serialNumber, employee);
   }
 
-  @Post('/:serialNumber/report-defect')
-  reportDefect(
+  @Post('/:serialNumber/add-defect')
+  addtDefect(
     @Param('serialNumber') serialNumber: string,
-    @Body('notes') notes: string,
+    @Body('defect') defect: string,
   ) {
-    return this.machinesService.reportDefect(serialNumber, notes);
+    return this.machinesService.addDefect(serialNumber, defect);
+  }
+
+  @Post('/:serialNumber/delete-defect')
+  deleteDefect(
+    @Param('serialNumber') serialNumber: string,
+    @Body('defect') defect: string,
+  ) {
+    return this.machinesService.deleteDefect(serialNumber, defect);
   }
 
   @Post('/:serialNumber/priority')
@@ -111,6 +119,16 @@ export class MachinesController {
     @CurrentUser() user: UserPayload,
   ) {
     return this.machinesService.assignMaintainer(serialNumber, user);
+  }
+
+  @Post('/:serialNumber/unassign-maintainer')
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.MAINTAINER)
+  unassignMaintainer(
+    @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.machinesService.unassignMaintainer(serialNumber, user);
   }
 
   @EventPattern(KepwareSubjects.MachineBroke)

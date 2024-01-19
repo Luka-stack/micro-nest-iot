@@ -36,11 +36,9 @@ export class MachineDto extends BaseDto {
   @Transform(({ value }) => plainToInstance(MachineMaintainInfoDto, value))
   maintainInfo: MachineMaintainInfoDto;
 
-  @Exclude()
-  version: number;
-}
-
-export class MachineWithHistoryDto extends BaseDto {
   @Transform(({ value }) => plainToInstance(MachineHistoryDto, value))
   maintenances: MachineHistoryDto;
+
+  @Exclude()
+  version: number;
 }

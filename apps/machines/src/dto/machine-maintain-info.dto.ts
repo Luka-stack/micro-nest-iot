@@ -1,8 +1,13 @@
-import { Transform } from 'class-transformer';
+import { Exclude } from 'class-transformer';
 
 export class MachineMaintainInfoDto {
-  @Transform(({ value }) => (value ? value.split(',') : []))
-  notes: string[];
+  @Exclude()
+  id: number;
+
+  @Exclude()
+  machineId: number;
+
+  defects: string[];
 
   priority: number;
 

@@ -18,7 +18,7 @@ import * as schema from '../database/schema';
 import { PG_CONNECTION } from '../constants';
 import { NOT_ASSIGNED } from '../app.types';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
-import { Machine, MaintainInfo } from '../bos/machine';
+import { Machine, MachineColumns, MaintainInfo } from '../bos/machine';
 
 @Injectable()
 export class MachinesRepository {
@@ -38,8 +38,8 @@ export class MachinesRepository {
     });
   }
 
-  async findOne(serialNumber: string, plain: boolean) {
-    if (plain) {
+  async findOne(serialNumber: string, columns?: MachineColumns) {
+    if (!columns) {
       const machine = await this.conn.query.PGMachine.findFirst({
         where: eq(schema.PGMachine.serialNumber, serialNumber),
       });
@@ -53,17 +53,7 @@ export class MachinesRepository {
 
     const machine = await this.conn.query.PGMachine.findFirst({
       where: eq(schema.PGMachine.serialNumber, serialNumber),
-      with: {
-        model: true,
-        type: true,
-        maintainInfo: {
-          columns: {
-            notes: true,
-            priority: true,
-            maintenance: true,
-          },
-        },
-      },
+      with: columns,
     });
 
     if (!machine) {
@@ -71,6 +61,21 @@ export class MachinesRepository {
     }
 
     return machine;
+  }
+
+  async findMachineMaintainInfo(serialNumber: string) {
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+      with: {
+        maintainInfo: true,
+      },
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    return machine.maintainInfo;
   }
 
   findStatus(serialNumber: string) {
@@ -99,14 +104,11 @@ export class MachinesRepository {
     return updated[0];
   }
 
-  async updateMaintainInfo(
-    machineId: number,
-    maintainInfo: Partial<MaintainInfo>,
-  ) {
+  async updateMaintainInfo(id: number, maintainInfo: Partial<MaintainInfo>) {
     const updated = await this.conn
       .update(schema.PGMachineMaintainInfo)
       .set(maintainInfo)
-      .where(eq(schema.PGMachineMaintainInfo.machineId, machineId))
+      .where(eq(schema.PGMachineMaintainInfo.id, id))
       .returning();
 
     return updated[0];
@@ -132,14 +134,15 @@ export class MachinesRepository {
 
   async assignMaintainer(serialNumber: string, maintainer: string) {
     const machine = await this.conn.query.PGMachine.findFirst({
-      where: and(
-        eq(schema.PGMachine.serialNumber, serialNumber),
-        isNull(schema.PGMachine.assignedMaintainer),
-      ),
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
     });
 
     if (!machine) {
       throw new NotFoundException('Machine not found');
+    }
+
+    if (machine.assignedMaintainer !== null) {
+      throw new Error('Machine already has maintainer');
     }
 
     const updated = await this.conn
@@ -149,6 +152,18 @@ export class MachinesRepository {
       .returning();
 
     return updated[0];
+  }
+
+  async unassignMaintainer(serialNumber: string, maintainer: string) {
+    await this.conn
+      .update(schema.PGMachine)
+      .set({ assignedMaintainer: null })
+      .where(
+        and(
+          eq(schema.PGMachine.serialNumber, serialNumber),
+          eq(schema.PGMachine.assignedMaintainer, maintainer),
+        ),
+      );
   }
 
   async query(queryDto: QueryMachineDto) {
@@ -164,13 +179,7 @@ export class MachinesRepository {
       with: {
         type: true,
         model: true,
-        maintainInfo: {
-          columns: {
-            notes: true,
-            priority: true,
-            maintenance: true,
-          },
-        },
+        maintainInfo: true,
       },
       orderBy: schema.PGMachine.serialNumber,
     }).prepare('query_machines');
