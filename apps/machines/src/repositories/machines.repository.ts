@@ -1,5 +1,12 @@
+import { UserPayload } from '@iot/security';
 import { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   SQLWrapper,
   and,
@@ -15,9 +22,10 @@ import {
 } from 'drizzle-orm';
 
 import * as schema from '../database/schema';
-import { PG_CONNECTION } from '../constants';
 import { NOT_ASSIGNED } from '../app.types';
+import { PG_CONNECTION } from '../constants';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
+import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 import { Machine, MachineColumns, MaintainInfo } from '../bos/machine';
 
 @Injectable()
@@ -164,6 +172,61 @@ export class MachinesRepository {
           eq(schema.PGMachine.assignedMaintainer, maintainer),
         ),
       );
+  }
+
+  async reportMaintenance(
+    serialNumber: string,
+    user: UserPayload,
+    body: ReportMaintenanceDto,
+  ) {
+    const machine = (await this.findOne(serialNumber, {
+      maintainInfo: true,
+    })) as Machine & {
+      maintainInfo: MaintainInfo;
+    };
+
+    if (machine.assignedMaintainer !== user.email) {
+      throw new UnauthorizedException('You cannot report maintenance');
+    }
+
+    if (machine.status === 'WORKING' || machine.status === 'IDLE') {
+      throw new BadRequestException('You cannot report maintenance now');
+    }
+
+    const defects = machine.maintainInfo.defects.filter(
+      (item) => !body.defects.includes(item),
+    );
+
+    await this.conn.transaction(async (trx) => {
+      await trx.insert(schema.PGMaintenanceHistory).values({
+        machineId: machine.id,
+        description: body.description,
+        date: new Date(),
+        maintainer: user.email,
+        nextMaintenance: new Date(body.nextMaintenance),
+        scheduled: machine.maintainInfo.maintenance,
+        type: machine.status === 'BROKEN' ? 'REPAIR' : 'MAINTENANCE',
+      });
+
+      await trx
+        .update(schema.PGMachine)
+        .set({
+          status: 'IDLE',
+          assignedMaintainer: null,
+          version: machine.version + 1,
+        })
+        .where(eq(schema.PGMachine.id, machine.id));
+
+      await trx
+        .update(schema.PGMachineMaintainInfo)
+        .set({
+          maintenance: new Date(body.nextMaintenance),
+          defects,
+        })
+        .where(eq(schema.PGMachineMaintainInfo.id, machine.maintainInfo.id));
+    });
+
+    return machine;
   }
 
   async query(queryDto: QueryMachineDto) {

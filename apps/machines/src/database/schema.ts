@@ -104,9 +104,7 @@ export const PGModel = pgTable(
 
 export const PGMaintenanceHistory = pgTable('maintenance_history', {
   id: serial('id').primaryKey(),
-  machineId: integer('machine_id')
-    .notNull()
-    .references(() => PGMachine.id),
+  machineId: integer('machine_id').notNull(),
   maintainer: varchar('maintainer'),
   description: text('description'),
   date: timestamp('date', { withTimezone: true }).defaultNow(),
@@ -155,7 +153,7 @@ export const PGModelsRelations = relations(PGModel, ({ one }) => ({
   }),
 }));
 
-export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
+export const PGMachineRelations = relations(PGMachine, ({ one, many }) => ({
   type: one(PGType, {
     fields: [PGMachine.type],
     references: [PGType.name],
@@ -168,8 +166,15 @@ export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
     references: [PGMachineMaintainInfo.machineId],
     fields: [PGMachine.id],
   }),
-  maintenances: one(PGMaintenanceHistory, {
-    references: [PGMaintenanceHistory.machineId],
-    fields: [PGMachine.id],
-  }),
+  maintenances: many(PGMaintenanceHistory),
 }));
+
+export const PGMaintenanceHistoryRelations = relations(
+  PGMaintenanceHistory,
+  ({ one }) => ({
+    machine: one(PGMachine, {
+      fields: [PGMaintenanceHistory.machineId],
+      references: [PGMachine.id],
+    }),
+  }),
+);

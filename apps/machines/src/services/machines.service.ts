@@ -9,6 +9,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
+import { MachineDto } from '../dto/machine.dto';
 import { KepwareService } from './kepware.service';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
 import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
@@ -16,11 +17,11 @@ import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { MachinesRepository } from '../repositories/machines.repository';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
+import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
-import { MachineDto } from '../dto/machine.dto';
 
 @Injectable()
 export class MachinesService {
@@ -159,14 +160,9 @@ export class MachinesService {
       ? machine.defects.filter((d) => d !== defect)
       : [];
 
-    const updatedInfo = await this.machinesRepository.updateMaintainInfo(
-      machine.id,
-      {
-        defects,
-      },
-    );
-
-    return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
+    await this.machinesRepository.updateMaintainInfo(machine.id, {
+      defects,
+    });
   }
 
   async changePriority(serialNumber: string, priority: string) {
@@ -211,6 +207,24 @@ export class MachinesService {
 
       throw new InternalServerErrorException('Internal server error');
     }
+  }
+
+  async reportMaintenance(
+    serialNumber: string,
+    user: UserPayload,
+    body: ReportMaintenanceDto,
+  ) {
+    const machine = await this.machinesRepository.reportMaintenance(
+      serialNumber,
+      user,
+      body,
+    );
+
+    this.kepwareService.emitMachineUpdated({
+      serialNumber: machine.serialNumber,
+      version: machine.version,
+      status: 'IDLE',
+    });
   }
 
   async brokeMachine({

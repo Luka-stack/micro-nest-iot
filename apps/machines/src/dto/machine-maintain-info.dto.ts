@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Transform } from 'class-transformer';
 
 export class MachineMaintainInfoDto {
   @Exclude()
@@ -7,6 +7,13 @@ export class MachineMaintainInfoDto {
   @Exclude()
   machineId: number;
 
+  @Transform(({ value }) => {
+    if (value) {
+      return value;
+    }
+
+    return [];
+  })
   defects: string[];
 
   priority: number;

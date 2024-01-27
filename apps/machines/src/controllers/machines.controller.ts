@@ -15,6 +15,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   Patch,
   Post,
@@ -29,6 +30,7 @@ import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
+import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 
 @Controller('/machines')
 export class MachinesController {
@@ -96,11 +98,24 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/delete-defect')
+  @HttpCode(204)
   deleteDefect(
     @Param('serialNumber') serialNumber: string,
     @Body('defect') defect: string,
   ) {
     return this.machinesService.deleteDefect(serialNumber, defect);
+  }
+
+  @Post('/:serialNumber/report-maintenance')
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.MAINTAINER)
+  reportMaintenance(
+    @Param('serialNumber') serialNumber: string,
+    @Body() payload: ReportMaintenanceDto,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.machinesService.reportMaintenance(serialNumber, user, payload);
   }
 
   @Post('/:serialNumber/priority')
