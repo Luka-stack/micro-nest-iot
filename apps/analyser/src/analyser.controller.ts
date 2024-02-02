@@ -1,16 +1,18 @@
+import { JwtAuthGuard } from '@iot/security';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import {
   KepwareSubjects,
   RegisterUtilizationMessage,
   RegisterWorkMessage,
   RmqService,
 } from '@iot/communication';
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 
 import { AnalyserService } from './analyser.service';
 import { QueryUtilizationDto } from './dto/query-utilization.dto';
 
 @Controller('/analyser')
+@UseGuards(JwtAuthGuard)
 export class AnalyserController {
   constructor(
     private readonly rmqService: RmqService,

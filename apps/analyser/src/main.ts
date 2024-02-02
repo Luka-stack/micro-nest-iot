@@ -1,10 +1,10 @@
 import { RmqService } from '@iot/communication';
 import { NestFactory } from '@nestjs/core';
-
-import { AnalyserModule } from './analyser.module';
-import { ANALYSER_QUEUE } from './constants/queues';
-import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ValidationPipe } from '@nestjs/common';
+
+import { ANALYSER_QUEUE } from './constants';
+import { AnalyserModule } from './analyser.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AnalyserModule);

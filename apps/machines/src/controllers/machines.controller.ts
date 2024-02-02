@@ -29,10 +29,10 @@ import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
 import { AssignEmployeeDto } from '../dto/incoming/assign-employee.dto';
 import { ResponseMachineDto } from '../dto/outcoming/response-machine.dto';
 import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
-import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 
 @Controller('/machines')
+@UseGuards(JwtAuthGuard)
 export class MachinesController {
   constructor(
     private readonly machinesService: MachinesService,
@@ -42,19 +42,19 @@ export class MachinesController {
   @Get('/:serialNumber')
   findOne(
     @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
   ): Promise<ResponseMachineDto> {
-    return this.machinesService.findOne(serialNumber);
+    return this.machinesService.findOne(serialNumber, user);
   }
 
-  @Get('/:serialNumber/status')
-  findMachineStatus(
-    @Param('serialNumber') serialNumber: string,
-  ): Promise<ResponseMachineStatusDto> {
-    return this.machinesService.findMachineStatus(serialNumber);
-  }
+  // @Get('/:serialNumber/status')
+  // findMachineStatus(
+  //   @Param('serialNumber') serialNumber: string,
+  // ): Promise<ResponseMachineStatusDto> {
+  //   return this.machinesService.findMachineStatus(serialNumber);
+  // }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
   async findMany(
     @Query() queryMachineDto: QueryMachineDto,
     @CurrentUser() user: UserPayload,
@@ -63,7 +63,6 @@ export class MachinesController {
   }
 
   @Get('/:serialNumber/history')
-  @UseGuards(JwtAuthGuard)
   async findMachineHistory(
     @Param('serialNumber') serialNumber: string,
     @CurrentUser() user: UserPayload,
@@ -72,7 +71,6 @@ export class MachinesController {
   }
 
   @Patch('/:serialNumber')
-  @UseGuards(JwtAuthGuard)
   update(
     @Param('serialNumber') serialNumber: string,
     @Body() updateMachineDto: UpdateMachineDto,
@@ -82,6 +80,7 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/assign-employee')
+  @Roles(USER_ROLES.ADMIN)
   assignEmployee(
     @Param('serialNumber') serialNumber: string,
     @Body() employee: AssignEmployeeDto,
@@ -90,26 +89,29 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/add-defect')
+  @Roles(USER_ROLES.EMPLOYEE, USER_ROLES.ADMIN)
   addtDefect(
     @Param('serialNumber') serialNumber: string,
     @Body('defect') defect: string,
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.machinesService.addDefect(serialNumber, defect);
+    return this.machinesService.addDefect(serialNumber, defect, user);
   }
 
   @Post('/:serialNumber/delete-defect')
+  @Roles(USER_ROLES.EMPLOYEE, USER_ROLES.ADMIN)
   @HttpCode(204)
   deleteDefect(
     @Param('serialNumber') serialNumber: string,
     @Body('defect') defect: string,
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.machinesService.deleteDefect(serialNumber, defect);
+    return this.machinesService.deleteDefect(serialNumber, defect, user);
   }
 
   @Post('/:serialNumber/report-maintenance')
-  @HttpCode(204)
-  @UseGuards(JwtAuthGuard)
   @Roles(USER_ROLES.MAINTAINER)
+  @HttpCode(204)
   reportMaintenance(
     @Param('serialNumber') serialNumber: string,
     @Body() payload: ReportMaintenanceDto,
@@ -119,16 +121,18 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/priority')
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE)
   changePriority(
     @Param('serialNumber') serialNumber: string,
     @Body('priority') priority: string,
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.machinesService.changePriority(serialNumber, priority);
+    return this.machinesService.changePriority(serialNumber, priority, user);
   }
 
   @Post('/:serialNumber/assign-maintainer')
-  @UseGuards(JwtAuthGuard)
   @Roles(USER_ROLES.MAINTAINER)
+  @HttpCode(204)
   assignMaintainer(
     @Param('serialNumber') serialNumber: string,
     @CurrentUser() user: UserPayload,
@@ -137,8 +141,8 @@ export class MachinesController {
   }
 
   @Post('/:serialNumber/unassign-maintainer')
-  @UseGuards(JwtAuthGuard)
   @Roles(USER_ROLES.MAINTAINER)
+  @HttpCode(204)
   unassignMaintainer(
     @Param('serialNumber') serialNumber: string,
     @CurrentUser() user: UserPayload,

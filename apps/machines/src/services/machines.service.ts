@@ -5,7 +5,6 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 
@@ -20,7 +19,6 @@ import { ResponseMachinesDto } from '../dto/outcoming/response-machines.dto';
 import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
-import { ResponseMachineStatusDto } from '../dto/outcoming/response-machine-status.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
 
 @Injectable()
@@ -37,26 +35,32 @@ export class MachinesService {
     private readonly kepwareService: KepwareService,
   ) {}
 
-  async findOne(serialNumber: string): Promise<ResponseMachineDto> {
+  async findOne(
+    serialNumber: string,
+    user: UserPayload,
+  ): Promise<ResponseMachineDto> {
     const machine = await this.machinesRepository.findOne(serialNumber, {
       model: true,
       type: true,
       maintainInfo: true,
     });
+
+    this.validateAssignEmployee(user, machine.assignedEmployee);
+
     return { data: plainToInstance(MachineDto, machine) };
   }
 
-  async findMachineStatus(
-    serialNumber: string,
-  ): Promise<ResponseMachineStatusDto> {
-    const machine = await this.machinesRepository.findStatus(serialNumber);
+  // async findMachineStatus(
+  //   serialNumber: string,
+  // ): Promise<ResponseMachineStatusDto> {
+  //   const machine = await this.machinesRepository.findStatus(serialNumber);
 
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
+  //   if (!machine) {
+  //     throw new NotFoundException('Machine not found');
+  //   }
 
-    return { data: machine };
-  }
+  //   return { data: machine };
+  // }
 
   async findMany(
     queryDto: QueryMachineDto,
@@ -85,13 +89,7 @@ export class MachinesService {
       maintenances: true,
     });
 
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
-
-    if (user.role === 'employee' && machine.assignedEmployee !== user.email) {
-      throw new UnauthorizedException('You cannot view this machine history');
-    }
+    this.validateAssignEmployee(user, machine.assignedEmployee);
 
     return { data: plainToInstance(MachineDto, machine) };
   }
@@ -103,11 +101,11 @@ export class MachinesService {
   ): Promise<ResponseMachineDto> {
     const machine = await this.machinesRepository.findOne(serialNumber);
 
+    this.validateUpdateAccess(user, machine, machineDto.status);
+
     if (!machineDto.status && !machineDto.productionRate) {
       return { data: plainToInstance(MachineDto, machine) };
     }
-
-    this.validateUpdateAccess(user, machine, machineDto.status);
 
     if (
       (machineDto.status &&
@@ -135,15 +133,21 @@ export class MachinesService {
     return { data: plainToInstance(MachineDto, updatedMachine) };
   }
 
-  async addDefect(serialNumber: string, defect: string) {
-    const machine =
-      await this.machinesRepository.findMachineMaintainInfo(serialNumber);
+  async addDefect(serialNumber: string, defect: string, user: UserPayload) {
+    const { maintainInfo, assignedEmployee } =
+      (await this.machinesRepository.findOne(serialNumber, {
+        maintainInfo: true,
+      })) as Machine & {
+        maintainInfo: MaintainInfo;
+      };
 
-    const defects = machine.defects || [];
+    this.validateAssignEmployee(user, assignedEmployee);
+
+    const defects = maintainInfo.defects || [];
     defects.push(defect);
 
     const updatedInfo = await this.machinesRepository.updateMaintainInfo(
-      machine.id,
+      maintainInfo.id,
       {
         defects,
       },
@@ -152,21 +156,33 @@ export class MachinesService {
     return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
   }
 
-  async deleteDefect(serialNumber: string, defect: string) {
-    const machine =
-      await this.machinesRepository.findMachineMaintainInfo(serialNumber);
+  async deleteDefect(serialNumber: string, defect: string, user: UserPayload) {
+    const { maintainInfo, assignedEmployee } =
+      (await this.machinesRepository.findOne(serialNumber, {
+        maintainInfo: true,
+      })) as Machine & {
+        maintainInfo: MaintainInfo;
+      };
 
-    const defects = machine.defects
-      ? machine.defects.filter((d) => d !== defect)
+    this.validateAssignEmployee(user, assignedEmployee);
+
+    const defects = maintainInfo.defects
+      ? maintainInfo.defects.filter((d) => d !== defect)
       : [];
 
-    await this.machinesRepository.updateMaintainInfo(machine.id, {
+    await this.machinesRepository.updateMaintainInfo(maintainInfo.id, {
       defects,
     });
   }
 
-  async changePriority(serialNumber: string, priority: string) {
+  async changePriority(
+    serialNumber: string,
+    priority: string,
+    user: UserPayload,
+  ) {
     const machine = await this.machinesRepository.findOne(serialNumber);
+
+    this.validateAssignEmployee(user, machine.assignedEmployee);
 
     const updatedInfo = await this.machinesRepository.updateMaintainInfo(
       machine.id,
@@ -188,12 +204,13 @@ export class MachinesService {
   }
 
   async assignMaintainer(serialNumber: string, user: UserPayload) {
-    const machine = await this.machinesRepository.assignMaintainer(
-      serialNumber,
-      user.email,
-    );
+    try {
+      await this.machinesRepository.assignMaintainer(serialNumber, user.email);
+    } catch (error) {
+      this.logger.error("Couldn't assign maintainer", error);
 
-    return { data: plainToInstance(MachineDto, machine) };
+      throw new InternalServerErrorException('Internal server error');
+    }
   }
 
   async unassignMaintainer(serialNumber: string, user: UserPayload) {
@@ -214,15 +231,31 @@ export class MachinesService {
     user: UserPayload,
     body: ReportMaintenanceDto,
   ) {
-    const machine = await this.machinesRepository.reportMaintenance(
-      serialNumber,
-      user,
+    const machine = (await this.machinesRepository.findOne(serialNumber, {
+      maintainInfo: true,
+    })) as Machine & {
+      maintainInfo: MaintainInfo;
+    };
+
+    this.validateAssignMaintainer(user, machine.assignedMaintainer);
+
+    if (machine.status === 'WORKING' || machine.status === 'IDLE') {
+      throw new BadRequestException('You cannot report maintenance now');
+    }
+
+    const defects = machine.maintainInfo.defects.filter(
+      (item) => !body.defects.includes(item),
+    );
+
+    const updated = await this.machinesRepository.reportMaintenance(
+      machine,
+      defects,
       body,
     );
 
     this.kepwareService.emitMachineUpdated({
-      serialNumber: machine.serialNumber,
-      version: machine.version,
+      serialNumber: updated.serialNumber,
+      version: updated.version,
       status: 'IDLE',
     });
   }
@@ -304,6 +337,25 @@ export class MachinesService {
       }
 
       return;
+    }
+  }
+
+  private validateAssignEmployee(user: UserPayload, assignedEmployee: string) {
+    if (user.role === 'employee' && assignedEmployee === user.email) {
+      throw new UnauthorizedException(
+        "You don't have permission to this resouce",
+      );
+    }
+  }
+
+  private validateAssignMaintainer(
+    user: UserPayload,
+    assignedMaintainer: string,
+  ) {
+    if (user.role === 'maintainer' && assignedMaintainer === user.email) {
+      throw new UnauthorizedException(
+        "You don't have permission to this resouce",
+      );
     }
   }
 }

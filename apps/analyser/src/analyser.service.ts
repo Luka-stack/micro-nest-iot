@@ -1,15 +1,15 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Injectable, Logger } from '@nestjs/common';
-
-import { Work, WorkDocument } from './schema/work.schema';
 import {
   RegisterUtilizationMessage,
   RegisterWorkMessage,
 } from '@iot/communication';
-import { Utilization, UtilizationDocument } from './schema/utilization.schema';
-import { QueryUtilizationDto } from './dto/query-utilization.dto';
+
 import { StatisticsDto } from './dto/statistics-dto';
+import { Work, WorkDocument } from './schema/work.schema';
+import { QueryUtilizationDto } from './dto/query-utilization.dto';
+import { Utilization, UtilizationDocument } from './schema/utilization.schema';
 
 @Injectable()
 export class AnalyserService {

@@ -1,14 +1,15 @@
 import * as Joi from 'joi';
 import { Module } from '@nestjs/common';
+import { SecurityModule } from '@iot/security';
 import { MongooseModule } from '@nestjs/mongoose/dist';
 import { CommunicationModule } from '@iot/communication';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { MONGODB_URI } from './constants/database';
 import { AnalyserService } from './analyser.service';
 import { Work, WorkSchema } from './schema/work.schema';
 import { AnalyserController } from './analyser.controller';
 import { Utilization, UtilizationSchema } from './schema/utilization.schema';
+import { JWT_EXPIRATION, JWT_SECRET, MONGODB_URI } from './constants';
 
 @Module({
   imports: [
@@ -20,6 +21,10 @@ import { Utilization, UtilizationSchema } from './schema/utilization.schema';
         MONGODB_URI: Joi.string().required(),
       }),
       envFilePath: './apps/analyser/.env',
+    }),
+    SecurityModule.register({
+      secret: JWT_SECRET,
+      expiresInSeconds: JWT_EXPIRATION,
     }),
     CommunicationModule,
     MongooseModule.forRootAsync({
