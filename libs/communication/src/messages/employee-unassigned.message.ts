@@ -1,0 +1,10 @@
+import { MachineSubjects } from './subjects';
+
+export interface EmployeeUnassignedMessage {
+  message: MachineSubjects.EmployeeUnassigned;
+  data: {
+    machineId: string;
+    employee: string;
+    version: number;
+  };
+}

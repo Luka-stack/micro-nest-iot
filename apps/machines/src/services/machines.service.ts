@@ -20,6 +20,7 @@ import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
+import { AnalyserService } from './analyser.service';
 
 @Injectable()
 export class MachinesService {
@@ -33,6 +34,7 @@ export class MachinesService {
   constructor(
     private readonly machinesRepository: MachinesRepository,
     private readonly kepwareService: KepwareService,
+    private readonly analyserService: AnalyserService,
   ) {}
 
   async findOne(
@@ -199,6 +201,20 @@ export class MachinesService {
       serialNumber,
       employee.employee || null,
     );
+
+    if (employee) {
+      this.analyserService.emitEmployeeAssigned({
+        employee: employee.employee,
+        machineId: serialNumber,
+        version: machine.version,
+      });
+    } else {
+      this.analyserService.emitEmplyoeeUnassigned({
+        employee: employee.employee,
+        machineId: serialNumber,
+        version: machine.version,
+      });
+    }
 
     return { data: plainToInstance(MachineDto, machine) };
   }

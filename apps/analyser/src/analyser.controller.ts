@@ -1,8 +1,17 @@
-import { JwtAuthGuard } from '@iot/security';
+import {
+  CurrentUser,
+  JwtAuthGuard,
+  Roles,
+  USER_ROLES,
+  UserPayload,
+} from '@iot/security';
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import {
+  EmployeeAssignedMessage,
+  EmployeeUnassignedMessage,
   KepwareSubjects,
+  MachineSubjects,
   RegisterUtilizationMessage,
   RegisterWorkMessage,
   RmqService,
@@ -12,7 +21,6 @@ import { AnalyserService } from './analyser.service';
 import { QueryUtilizationDto } from './dto/query-utilization.dto';
 
 @Controller('/analyser')
-@UseGuards(JwtAuthGuard)
 export class AnalyserController {
   constructor(
     private readonly rmqService: RmqService,
@@ -41,21 +49,60 @@ export class AnalyserController {
     } catch {}
   }
 
+  @EventPattern(MachineSubjects.EmployeeAssigned)
+  async addAccess(
+    @Payload() data: EmployeeAssignedMessage['data'],
+    @Ctx() context: RmqContext,
+  ) {
+    try {
+      await this.analyserService.addAccess(data);
+      this.rmqService.ack(context);
+    } catch {}
+  }
+
+  @EventPattern(MachineSubjects.EmployeeUnassigned)
+  async removeAccess(
+    @Payload() data: EmployeeUnassignedMessage['data'],
+    @Ctx() context: RmqContext,
+  ) {
+    try {
+      await this.analyserService.removeAccess(data);
+      this.rmqService.ack(context);
+    } catch {}
+  }
+
   @Get('/:serialNumber/utilization')
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.EMPLOYEE, USER_ROLES.ADMIN)
   getUtilization(
     @Param('serialNumber') serialNumber: string,
     @Query() queryUtilization: QueryUtilizationDto,
+    @CurrentUser() user: UserPayload,
   ) {
-    return this.analyserService.getUtilization(serialNumber, queryUtilization);
+    return this.analyserService.getUtilization(
+      serialNumber,
+      queryUtilization,
+      user,
+    );
   }
 
   @Get('/:serialNumber/statistics')
-  getStatistics(@Param('serialNumber') serialNumber: string) {
-    return this.analyserService.getStatistics(serialNumber);
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.EMPLOYEE, USER_ROLES.ADMIN)
+  getStatistics(
+    @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.analyserService.getStatistics(serialNumber, user);
   }
 
   @Get('/:serialNumber/work')
-  getWork(@Param('serialNumber') serialNumber: string) {
-    return this.analyserService.getWork(serialNumber);
+  @UseGuards(JwtAuthGuard)
+  @Roles(USER_ROLES.EMPLOYEE, USER_ROLES.ADMIN)
+  getWork(
+    @Param('serialNumber') serialNumber: string,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return this.analyserService.getWork(serialNumber, user);
   }
 }

@@ -2,6 +2,7 @@ export const PG_CONNECTION = 'PG_CONNECTION';
 
 export const KEPWARE_QUEUE = 'KEPWARE';
 export const MACHINE_QUEUE = 'MACHINE';
+export const ANALYSER_QUEUE = 'ANALYSER';
 
 export const JWT_SECRET = 'JWT_SECRET';
 export const JWT_EXPIRATION = 'JWT_EXPIRATION_SECONDS';

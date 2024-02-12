@@ -10,9 +10,11 @@ import { KepwareService } from './services/kepware.service';
 import { MiscController } from './controllers/misc.controller';
 import { MiscRepository } from './repositories/misc.repository';
 import { MachinesService } from './services/machines.service';
+import { AnalyserService } from './services/analyser.service';
 import { MachinesController } from './controllers/machines.controller';
 import { MachinesRepository } from './repositories/machines.repository';
 import {
+  ANALYSER_QUEUE,
   JWT_EXPIRATION,
   JWT_SECRET,
   KEPWARE_QUEUE,
@@ -29,7 +31,10 @@ import {
       secret: JWT_SECRET,
       expiresInSeconds: JWT_EXPIRATION,
     }),
-    CommunicationModule.register([{ name: KEPWARE_QUEUE }]),
+    CommunicationModule.register([
+      { name: KEPWARE_QUEUE },
+      { name: ANALYSER_QUEUE },
+    ]),
     DrizzleModule.register({ name: PG_CONNECTION, schema }),
   ],
   controllers: [MachinesController, MiscController],
@@ -39,6 +44,7 @@ import {
     MachinesRepository,
     MiscRepository,
     KepwareService,
+    AnalyserService,
   ],
 })
 export class MachinesModule {}

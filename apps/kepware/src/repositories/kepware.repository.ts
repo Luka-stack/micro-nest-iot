@@ -1,7 +1,4 @@
-import {
-  MachineCreatedMessage,
-  MachineUpdatedMessage,
-} from '@iot/communication';
+import { MachineUpdatedMessage } from '@iot/communication';
 import {
   BadRequestException,
   Injectable,
@@ -15,19 +12,19 @@ import { PrismaConnection } from '../database/prisma-connection';
 export class KepwareRepository {
   constructor(private readonly prisma: PrismaConnection) {}
 
-  async create(data: MachineCreatedMessage['data']): Promise<void> {
-    try {
-      await this.prisma.machine.create({
-        data,
-      });
-    } catch (err) {
-      if (err.constructor.name === 'PrismaClientKnownRequestError') {
-        if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
-          throw new BadRequestException('Serial Number must be unique');
-        }
-      }
-    }
-  }
+  // async create(data: MachineCreatedMessage['data']): Promise<void> {
+  //   try {
+  //     await this.prisma.machine.create({
+  //       data,
+  //     });
+  //   } catch (err) {
+  //     if (err.constructor.name === 'PrismaClientKnownRequestError') {
+  //       if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
+  //         throw new BadRequestException('Serial Number must be unique');
+  //       }
+  //     }
+  //   }
+  // }
 
   async update(data: MachineUpdatedMessage['data']) {
     const machine = await this.prisma.machine.findUnique({

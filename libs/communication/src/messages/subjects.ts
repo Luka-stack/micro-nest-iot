@@ -2,6 +2,8 @@ export enum MachineSubjects {
   MachineCreated = 'machine:created',
   MachineUpdated = 'machine:updated',
   MachineDeleted = 'machine:deleted',
+  EmployeeAssigned = 'employee:assigned',
+  EmployeeUnassigned = 'employee:unassigned',
 }
 
 export enum KepwareSubjects {

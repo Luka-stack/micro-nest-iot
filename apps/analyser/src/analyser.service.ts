@@ -1,14 +1,18 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
+import { UserPayload } from '@iot/security';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import {
   RegisterUtilizationMessage,
   RegisterWorkMessage,
+  EmployeeAssignedMessage,
+  EmployeeUnassignedMessage,
 } from '@iot/communication';
 
 import { StatisticsDto } from './dto/statistics-dto';
 import { Work, WorkDocument } from './schema/work.schema';
 import { QueryUtilizationDto } from './dto/query-utilization.dto';
+import { Access, AccessDocument } from './schema/access.schema';
 import { Utilization, UtilizationDocument } from './schema/utilization.schema';
 
 @Injectable()
@@ -17,6 +21,8 @@ export class AnalyserService {
 
   constructor(
     @InjectModel(Work.name) private readonly workModel: Model<WorkDocument>,
+    @InjectModel(Access.name)
+    private readonly accessModel: Model<AccessDocument>,
     @InjectModel(Utilization.name)
     private readonly utilizationModel: Model<UtilizationDocument>,
   ) {}
@@ -55,7 +61,20 @@ export class AnalyserService {
     }
   }
 
-  async getUtilization(serialNumber: string, query: QueryUtilizationDto) {
+  async getUtilization(
+    serialNumber: string,
+    query: QueryUtilizationDto,
+    user: UserPayload,
+  ) {
+    const access = await this.accessModel.findOne({
+      machineId: serialNumber,
+      employee: user.email,
+    });
+
+    if (!access) {
+      throw new UnauthorizedException('You do not have access to this machine');
+    }
+
     const tillThatDay = new Date(query.toDate);
     tillThatDay.setDate(tillThatDay.getDate() + 1);
 
@@ -103,14 +122,35 @@ export class AnalyserService {
     };
   }
 
-  async getWork(serialNumber: string) {
+  async getWork(serialNumber: string, user: UserPayload) {
+    const access = await this.accessModel.findOne({
+      machineId: serialNumber,
+      employee: user.email,
+    });
+
+    if (!access) {
+      throw new UnauthorizedException('You do not have access to this machine');
+    }
+
     const data = await this.workModel.find({ serialNumber });
     const machinesDTO = data.map((machine) => machine.toObject());
 
     return machinesDTO;
   }
 
-  async getStatistics(serialNumber: string): Promise<StatisticsDto> {
+  async getStatistics(
+    serialNumber: string,
+    user: UserPayload,
+  ): Promise<StatisticsDto> {
+    const access = await this.accessModel.findOne({
+      machineId: serialNumber,
+      employee: user.email,
+    });
+
+    if (!access) {
+      throw new UnauthorizedException('You do not have access to this machine');
+    }
+
     const todayDate = new Date();
     todayDate.setUTCHours(0, 0, 0, 0);
 
@@ -245,6 +285,53 @@ export class AnalyserService {
         avgLastMonth: Math.floor(statistics[0].lastMonth / 31),
       },
     };
+  }
+
+  async removeAccess(data: EmployeeUnassignedMessage['data']) {
+    const existingWork = await this.accessModel.findOne({
+      machineId: data.machineId,
+    });
+
+    if (!existingWork) {
+      throw new Error('Machine not found');
+    }
+
+    if (existingWork.__v + 1 !== data.version) {
+      throw new Error('Bad version');
+    }
+
+    const response = await this.accessModel.deleteOne({
+      machineId: data.machineId,
+    });
+
+    if (response.deletedCount === 0) {
+      throw new Error('Machine was not deleted');
+    }
+  }
+
+  async addAccess(data: EmployeeAssignedMessage['data']) {
+    const existingWork = await this.accessModel.findOne({
+      machineId: data.machineId,
+    });
+
+    if (existingWork) {
+      if (existingWork.__v + 1 !== data.version) {
+        throw new Error('Bad version');
+      }
+
+      existingWork.employee = data.employee;
+      existingWork.__v = data.version;
+      await existingWork.save();
+      return;
+    }
+
+    const newWork = new this.accessModel({
+      machineId: data.machineId,
+      employee: data.employee,
+      __v: data.version,
+    });
+
+    await newWork.save();
   }
 
   private fillMissingDates(

@@ -111,7 +111,7 @@ export class MachinesRepository {
 
     const updated = await this.conn
       .update(schema.PGMachine)
-      .set({ assignedEmployee: employee })
+      .set({ assignedEmployee: employee, version: machine.version + 1 })
       .where(eq(schema.PGMachine.serialNumber, serialNumber))
       .returning();
 
