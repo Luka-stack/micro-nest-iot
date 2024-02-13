@@ -18,18 +18,20 @@ export class KepwareService {
     try {
       const machine = await this.kepwareRepository.update(data);
 
-      if (data.status === 'WORKING' && machine.status !== 'WORKING') {
+      const isMachineWorking = !!this.workingMachines.find(
+        machine.serialNumber,
+      );
+
+      if (isMachineWorking) {
+        if (data.productionRate || data.nextMaintenance) {
+          this.workingMachines.updateSimulation(machine.serialNumber, data);
+        }
+
+        if (data.status !== 'WORKING') {
+          this.workingMachines.stopSimulation(machine.serialNumber);
+        }
+      } else if (data.status === 'WORKING') {
         this.workingMachines.startSimulation(machine);
-        return;
-      }
-
-      if (data.status !== 'WORKING') {
-        this.workingMachines.stopSimulation(machine.serialNumber);
-        return;
-      }
-
-      if (data.productionRate || data.nextMaintenance) {
-        this.workingMachines.updateSimulation(machine.serialNumber, data);
       }
     } catch (err) {
       this.logger.error("Couldn't update machine", err);

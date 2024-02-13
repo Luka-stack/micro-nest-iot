@@ -8,6 +8,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AnalyserService } from './analyser.service';
 import { Work, WorkSchema } from './schema/work.schema';
 import { AnalyserController } from './analyser.controller';
+import { Access, AccessSchema } from './schema/access.schema';
 import { Utilization, UtilizationSchema } from './schema/utilization.schema';
 import { JWT_EXPIRATION, JWT_SECRET, MONGODB_URI } from './constants';
 
@@ -36,6 +37,7 @@ import { JWT_EXPIRATION, JWT_SECRET, MONGODB_URI } from './constants';
     MongooseModule.forFeature([
       { name: Work.name, schema: WorkSchema },
       { name: Utilization.name, schema: UtilizationSchema },
+      { name: Access.name, schema: AccessSchema },
     ]),
   ],
   controllers: [AnalyserController],

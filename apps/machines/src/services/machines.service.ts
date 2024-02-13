@@ -357,7 +357,7 @@ export class MachinesService {
   }
 
   private validateAssignEmployee(user: UserPayload, assignedEmployee: string) {
-    if (user.role === 'employee' && assignedEmployee === user.email) {
+    if (user.role === 'employee' && assignedEmployee !== user.email) {
       throw new UnauthorizedException(
         "You don't have permission to this resouce",
       );
@@ -368,7 +368,7 @@ export class MachinesService {
     user: UserPayload,
     assignedMaintainer: string,
   ) {
-    if (user.role === 'maintainer' && assignedMaintainer === user.email) {
+    if (user.role === 'maintainer' && assignedMaintainer !== user.email) {
       throw new UnauthorizedException(
         "You don't have permission to this resouce",
       );

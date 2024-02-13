@@ -1,6 +1,6 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { UserPayload } from '@iot/security';
+import { USER_ROLES, UserPayload } from '@iot/security';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import {
   RegisterUtilizationMessage,
@@ -66,14 +66,7 @@ export class AnalyserService {
     query: QueryUtilizationDto,
     user: UserPayload,
   ) {
-    const access = await this.accessModel.findOne({
-      machineId: serialNumber,
-      employee: user.email,
-    });
-
-    if (!access) {
-      throw new UnauthorizedException('You do not have access to this machine');
-    }
+    await this.checkAccess(serialNumber, user);
 
     const tillThatDay = new Date(query.toDate);
     tillThatDay.setDate(tillThatDay.getDate() + 1);
@@ -123,14 +116,7 @@ export class AnalyserService {
   }
 
   async getWork(serialNumber: string, user: UserPayload) {
-    const access = await this.accessModel.findOne({
-      machineId: serialNumber,
-      employee: user.email,
-    });
-
-    if (!access) {
-      throw new UnauthorizedException('You do not have access to this machine');
-    }
+    await this.checkAccess(serialNumber, user);
 
     const data = await this.workModel.find({ serialNumber });
     const machinesDTO = data.map((machine) => machine.toObject());
@@ -142,14 +128,7 @@ export class AnalyserService {
     serialNumber: string,
     user: UserPayload,
   ): Promise<StatisticsDto> {
-    const access = await this.accessModel.findOne({
-      machineId: serialNumber,
-      employee: user.email,
-    });
-
-    if (!access) {
-      throw new UnauthorizedException('You do not have access to this machine');
-    }
+    await this.checkAccess(serialNumber, user);
 
     const todayDate = new Date();
     todayDate.setUTCHours(0, 0, 0, 0);
@@ -367,5 +346,20 @@ export class AnalyserService {
     }
 
     return filledData;
+  }
+
+  private async checkAccess(machineId: string, user: UserPayload) {
+    if (user.role === USER_ROLES.ADMIN) {
+      return;
+    }
+
+    const access = await this.accessModel.findOne({
+      machineId: machineId,
+      employee: user.email,
+    });
+
+    if (!access) {
+      throw new UnauthorizedException('You do not have access to this machine');
+    }
   }
 }

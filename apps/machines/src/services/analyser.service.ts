@@ -4,12 +4,14 @@ import { EmployeeAssignedMessage } from '@iot/communication/messages/employee-as
 import { EmployeeUnassignedMessage } from '@iot/communication/messages/employee-unassigned.message';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
+import { ANALYSER_QUEUE } from '../constants';
+
 @Injectable()
 export class AnalyserService {
   private readonly logger = new Logger(AnalyserService.name);
 
   constructor(
-    @Inject('ANALYSER_QUEUE') private readonly clientProxy: ClientProxy,
+    @Inject(ANALYSER_QUEUE) private readonly clientProxy: ClientProxy,
   ) {}
 
   emitEmployeeAssigned(data: EmployeeAssignedMessage['data']): void {

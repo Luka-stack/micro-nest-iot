@@ -1,4 +1,3 @@
-import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import {
   CurrentUser,
   JwtAuthGuard,
@@ -6,11 +5,7 @@ import {
   USER_ROLES,
   UserPayload,
 } from '@iot/security';
-import {
-  KepwareSubjects,
-  MachineBrokeMessage,
-  RmqService,
-} from '@iot/communication';
+
 import {
   Body,
   Controller,
@@ -34,10 +29,7 @@ import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
 @Controller('/machines')
 @UseGuards(JwtAuthGuard)
 export class MachinesController {
-  constructor(
-    private readonly machinesService: MachinesService,
-    private readonly rmqService: RmqService,
-  ) {}
+  constructor(private readonly machinesService: MachinesService) {}
 
   @Get('/:serialNumber')
   findOne(
@@ -148,16 +140,5 @@ export class MachinesController {
     @CurrentUser() user: UserPayload,
   ) {
     return this.machinesService.unassignMaintainer(serialNumber, user);
-  }
-
-  @EventPattern(KepwareSubjects.MachineBroke)
-  async brokeMachine(
-    @Payload() data: MachineBrokeMessage['data'],
-    @Ctx() context: RmqContext,
-  ) {
-    try {
-      await this.machinesService.brokeMachine(data);
-      this.rmqService.ack(context);
-    } catch {}
   }
 }

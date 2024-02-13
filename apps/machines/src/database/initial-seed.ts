@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import {
   PGMachine,
+  PGMachineMaintainInfo,
   PGModel,
   PGProducent,
   PGProducentsToTypes,
@@ -440,153 +441,152 @@ async function seedMachineDB() {
   nextMonth.setMonth(nextMonth.getMonth() + 1);
 
   // Create Schedules
-  // TODO fix seeding
-  // await db.insert(PGMachineMaintainInfo).values([
-  //   {
-  //     machineId: 1,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 2,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 3,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 4,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 5,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 6,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 7,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 8,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 9,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 10,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 11,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 12,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 13,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 14,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 15,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 16,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 17,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 18,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 19,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 20,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 21,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 22,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 23,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  //   {
-  //     machineId: 24,
-  //     notes: '',
-  //     priority: 'NORMAL',
-  //     maintenance: nextMonth,
-  //   },
-  // ]);
+  await db.insert(PGMachineMaintainInfo).values([
+    {
+      machineId: 1,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 2,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 3,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 4,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 5,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 6,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 7,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 8,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 9,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 10,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 11,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 12,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 13,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 14,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 15,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 16,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 17,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 18,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 19,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 20,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 21,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 22,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 23,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+    {
+      machineId: 24,
+      defects: [],
+      priority: 'NORMAL',
+      maintenance: nextMonth,
+    },
+  ]);
 
   console.log('🌱 Seeding Finished 🌱');
   process.exit(0);

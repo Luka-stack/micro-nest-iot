@@ -9,6 +9,7 @@ import { AnalyserService } from './services/analyser.service';
 import { PrismaConnection } from './database/prisma-connection';
 import { KepwareController } from './kepware.controller';
 import { KepwareRepository } from './repositories/kepware.repository';
+import { WorkingMachineService } from './services/working-machine.service';
 import { ANALYSER_QUEUE, MACHINE_QUEUE } from './constants/queues';
 
 @Module({
@@ -34,6 +35,7 @@ import { ANALYSER_QUEUE, MACHINE_QUEUE } from './constants/queues';
     PrismaConnection,
     AnalyserService,
     KepwareRepository,
+    WorkingMachineService,
   ],
 })
 export class KepwareModule {}
