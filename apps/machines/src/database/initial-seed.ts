@@ -219,7 +219,7 @@ async function seedMachineDB() {
       faultRate: 0.25,
       minRate: 360,
       maxRate: 300,
-      defaultRate: 120,
+      defaultRate: 360,
       producentId: kawasaki.id,
       typeId: boxers.id,
     })
@@ -234,7 +234,7 @@ async function seedMachineDB() {
       faultRate: 0.25,
       minRate: 360,
       maxRate: 300,
-      defaultRate: 120,
+      defaultRate: 360,
       producentId: kawasaki.id,
       typeId: boxers.id,
     })
