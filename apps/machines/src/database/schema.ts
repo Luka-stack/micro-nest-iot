@@ -39,7 +39,8 @@ export const PGMachine = pgTable(
     model: varchar('model', { length: 50 }),
     assignedEmployee: varchar('assigned_employee').default(null),
     assignedMaintainer: varchar('assigned_maintainer').default(null),
-    version: integer('version'),
+    accessVersion: integer('access_version'),
+    statusVersion: integer('status_version'),
   },
   (machines) => ({
     serialNumberIndex: uniqueIndex('serial_number_idx').on(

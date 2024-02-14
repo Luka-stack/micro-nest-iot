@@ -78,7 +78,7 @@ export class MachinesRepository {
   ) {
     const data: Partial<Machine> = {
       ...machineData,
-      version: newVersion,
+      statusVersion: newVersion,
     };
 
     const updated = await this.conn
@@ -111,7 +111,10 @@ export class MachinesRepository {
 
     const updated = await this.conn
       .update(schema.PGMachine)
-      .set({ assignedEmployee: employee, version: machine.version + 1 })
+      .set({
+        assignedEmployee: employee,
+        accessVersion: machine.accessVersion + 1,
+      })
       .where(eq(schema.PGMachine.serialNumber, serialNumber))
       .returning();
 
@@ -173,7 +176,7 @@ export class MachinesRepository {
         .set({
           status: 'IDLE',
           assignedMaintainer: null,
-          version: machine.version + 1,
+          statusVersion: machine.statusVersion + 1,
         })
         .where(eq(schema.PGMachine.id, machine.id))
         .returning();

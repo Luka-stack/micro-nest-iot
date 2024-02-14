@@ -21,6 +21,7 @@ import { Machine, MaintainInfo } from '../bos/machine';
 import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
 import { AnalyserService } from './analyser.service';
+import { MachineBrokeMessage } from '@iot/communication';
 
 @Injectable()
 export class MachinesService {
@@ -51,18 +52,6 @@ export class MachinesService {
 
     return { data: plainToInstance(MachineDto, machine) };
   }
-
-  // async findMachineStatus(
-  //   serialNumber: string,
-  // ): Promise<ResponseMachineStatusDto> {
-  //   const machine = await this.machinesRepository.findStatus(serialNumber);
-
-  //   if (!machine) {
-  //     throw new NotFoundException('Machine not found');
-  //   }
-
-  //   return { data: machine };
-  // }
 
   async findMany(
     queryDto: QueryMachineDto,
@@ -122,12 +111,12 @@ export class MachinesService {
     const updatedMachine = await this.machinesRepository.update(
       serialNumber,
       machineDto,
-      machine.version + 1,
+      machine.statusVersion + 1,
     );
 
     this.kepwareService.emitMachineUpdated({
       serialNumber: machine.serialNumber,
-      version: machine.version,
+      version: machine.statusVersion + 1,
       status: machineDto.status,
       productionRate: machineDto.productionRate,
     });
@@ -196,23 +185,22 @@ export class MachinesService {
     return { data: plainToInstance(MachineMaintainInfoDto, updatedInfo) };
   }
 
-  async assignEmployee(serialNumber: string, employee: AssignEmployeeDto) {
+  async assignEmployee(serialNumber: string, { employee }: AssignEmployeeDto) {
     const machine = await this.machinesRepository.assignEmployee(
       serialNumber,
-      employee.employee || null,
+      employee || null,
     );
 
     if (employee) {
       this.analyserService.emitEmployeeAssigned({
-        employee: employee.employee,
+        employee: employee,
         machineId: serialNumber,
-        version: machine.version,
+        version: machine.accessVersion,
       });
     } else {
       this.analyserService.emitEmplyoeeUnassigned({
-        employee: employee.employee,
         machineId: serialNumber,
-        version: machine.version,
+        version: machine.accessVersion,
       });
     }
 
@@ -271,31 +259,21 @@ export class MachinesService {
 
     this.kepwareService.emitMachineUpdated({
       serialNumber: updated.serialNumber,
-      version: updated.version,
+      version: updated.statusVersion,
       status: 'IDLE',
     });
   }
 
-  async brokeMachine({
-    serialNumber,
-    version,
-  }: {
-    serialNumber: string;
-    version: number;
-  }) {
+  async brokeMachine({ serialNumber }: MachineBrokeMessage['data']) {
     try {
       const machine = await this.machinesRepository.findOne(serialNumber);
-
-      if (machine.version !== version) {
-        throw new Error('Machine version is outdated');
-      }
 
       await this.machinesRepository.update(
         serialNumber,
         {
           status: 'BROKEN',
         },
-        machine.version + 1,
+        machine.statusVersion,
       );
     } catch (err) {
       this.logger.error("Couldn't handle broke machine event", err);

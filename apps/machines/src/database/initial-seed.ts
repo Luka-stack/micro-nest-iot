@@ -248,7 +248,8 @@ async function seedMachineDB() {
       type: grabers.name,
       model: fanucXGX[0].name,
       productionRate: fanucXGX[0].defaultRate,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: 'f03af55e-b055',
@@ -256,7 +257,8 @@ async function seedMachineDB() {
       productionRate: fanucXGX[0].defaultRate,
       type: grabers.name,
       model: fanucXGX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e068-b055',
@@ -264,7 +266,8 @@ async function seedMachineDB() {
       productionRate: fanucXGX[0].defaultRate,
       type: grabers.name,
       model: fanucXGX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e202-b055',
@@ -272,7 +275,8 @@ async function seedMachineDB() {
       productionRate: fanucXGX[0].defaultRate,
       type: grabers.name,
       model: fanucXGX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: 'f03afd24-b055',
@@ -280,7 +284,8 @@ async function seedMachineDB() {
       productionRate: fanucXGY[0].defaultRate,
       type: grabers.name,
       model: fanucXGY[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e360-b055',
@@ -288,7 +293,8 @@ async function seedMachineDB() {
       productionRate: fanucXGY[0].defaultRate,
       type: grabers.name,
       model: fanucXGY[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e4c8-b055',
@@ -296,7 +302,8 @@ async function seedMachineDB() {
       productionRate: fanucMMM[0].defaultRate,
       type: multies.name,
       model: fanucMMM[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e626-b055',
@@ -304,7 +311,8 @@ async function seedMachineDB() {
       productionRate: fanucMMM[0].defaultRate,
       type: multies.name,
       model: fanucMMM[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e77a-b055',
@@ -312,7 +320,8 @@ async function seedMachineDB() {
       productionRate: fanucNMN[0].defaultRate,
       type: multies.name,
       model: fanucNMN[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48e8d8-b055',
@@ -320,7 +329,8 @@ async function seedMachineDB() {
       productionRate: fanucNMN[0].defaultRate,
       type: multies.name,
       model: fanucNMN[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48ec48-b055',
@@ -328,7 +338,8 @@ async function seedMachineDB() {
       productionRate: fanucXBOX[0].defaultRate,
       type: boxers.name,
       model: fanucXBOX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48edc4-b055',
@@ -336,7 +347,8 @@ async function seedMachineDB() {
       productionRate: fanucXBOX[0].defaultRate,
       type: boxers.name,
       model: fanucXBOX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48fb66-b055',
@@ -344,7 +356,8 @@ async function seedMachineDB() {
       productionRate: fanucYBOX[0].defaultRate,
       type: boxers.name,
       model: fanucYBOX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48fa26-b055',
@@ -352,7 +365,8 @@ async function seedMachineDB() {
       productionRate: fanucYBOX[0].defaultRate,
       type: boxers.name,
       model: fanucYBOX[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48f8c8-b055',
@@ -360,7 +374,8 @@ async function seedMachineDB() {
       productionRate: yaskawaAlle[0].defaultRate,
       type: multies.name,
       model: yaskawaAlle[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4c48f774-b055',
@@ -368,7 +383,8 @@ async function seedMachineDB() {
       productionRate: yaskawaAlle[0].defaultRate,
       type: multies.name,
       model: yaskawaAlle[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '87e6b0b2-b055',
@@ -377,7 +393,8 @@ async function seedMachineDB() {
       productionRate: abbG10[0].defaultRate,
       type: grabers.name,
       model: abbG10[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '87e6b378-b055',
@@ -385,7 +402,8 @@ async function seedMachineDB() {
       productionRate: abbG10[0].defaultRate,
       type: grabers.name,
       model: abbG10[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '87e6b6e8-b055',
@@ -393,7 +411,8 @@ async function seedMachineDB() {
       productionRate: abbG12[0].defaultRate,
       type: grabers.name,
       model: abbG12[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '87e6b7f6-b055',
@@ -401,7 +420,8 @@ async function seedMachineDB() {
       productionRate: abbG12[0].defaultRate,
       type: grabers.name,
       model: abbG12[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '20beb7c2-cffa',
@@ -409,7 +429,8 @@ async function seedMachineDB() {
       productionRate: kawaSashi[0].defaultRate,
       type: boxers.name,
       model: kawaSashi[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: 'ac829b22-2df5',
@@ -417,7 +438,8 @@ async function seedMachineDB() {
       productionRate: kawaSashi[0].defaultRate,
       type: boxers.name,
       model: kawaSashi[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '4d152653-1c00',
@@ -425,7 +447,8 @@ async function seedMachineDB() {
       productionRate: kawaHarro[0].defaultRate,
       type: boxers.name,
       model: kawaHarro[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
     {
       serialNumber: '93fc2e47-2994',
@@ -433,7 +456,8 @@ async function seedMachineDB() {
       productionRate: kawaHarro[0].defaultRate,
       type: boxers.name,
       model: kawaHarro[0].name,
-      version: 1,
+      accessVersion: 1,
+      statusVersion: 1,
     },
   ]);
 

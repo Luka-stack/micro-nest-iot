@@ -4,6 +4,5 @@ export interface MachineBrokeMessage {
   message: KepwareSubjects.MachineBroke;
   data: {
     serialNumber: string;
-    version: number;
   };
 }

@@ -26,7 +26,7 @@ export class AnalyserService {
     this.clientProxy.emit(MachineSubjects.EmployeeUnassigned, data);
 
     this.logger.debug(
-      `Employee ${data.employee} unassignment has been sent to the analyser server`,
+      `Employee unassignment from ${data.machineId} has been sent to the analyser server`,
     );
   }
 }

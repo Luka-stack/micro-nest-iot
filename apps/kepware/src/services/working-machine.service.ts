@@ -98,17 +98,12 @@ export class WorkingMachineService {
   private async breakMachine(working: WorkingMachine) {
     this.stopSimulation(working.machine.serialNumber);
 
-    await this.kepwareRepository.update({
-      serialNumber: working.machine.serialNumber,
-      status: 'BROKEN',
-      version: working.machine.version + 1,
-    });
+    await this.kepwareRepository.brakeMachine(working.machine.serialNumber);
 
     this.clientProxy.emit<any, MachineBrokeMessage['data']>(
       KepwareSubjects.MachineBroke,
       {
         serialNumber: working.machine.serialNumber,
-        version: working.machine.version + 1,
       },
     );
   }

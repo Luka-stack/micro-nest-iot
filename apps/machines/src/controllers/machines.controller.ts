@@ -39,13 +39,6 @@ export class MachinesController {
     return this.machinesService.findOne(serialNumber, user);
   }
 
-  // @Get('/:serialNumber/status')
-  // findMachineStatus(
-  //   @Param('serialNumber') serialNumber: string,
-  // ): Promise<ResponseMachineStatusDto> {
-  //   return this.machinesService.findMachineStatus(serialNumber);
-  // }
-
   @Get()
   async findMany(
     @Query() queryMachineDto: QueryMachineDto,

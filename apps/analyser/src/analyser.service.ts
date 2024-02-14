@@ -267,15 +267,17 @@ export class AnalyserService {
   }
 
   async removeAccess(data: EmployeeUnassignedMessage['data']) {
-    const existingWork = await this.accessModel.findOne({
+    const existingAccess = await this.accessModel.findOne({
       machineId: data.machineId,
     });
 
-    if (!existingWork) {
+    if (!existingAccess) {
+      this.logger.error('Machine not found');
       throw new Error('Machine not found');
     }
 
-    if (existingWork.__v + 1 !== data.version) {
+    if (existingAccess.version + 1 !== data.version) {
+      this.logger.error('Bad version', existingAccess.version, data.version);
       throw new Error('Bad version');
     }
 
@@ -284,33 +286,36 @@ export class AnalyserService {
     });
 
     if (response.deletedCount === 0) {
+      this.logger.error('Machine was not deleted');
       throw new Error('Machine was not deleted');
     }
   }
 
   async addAccess(data: EmployeeAssignedMessage['data']) {
-    const existingWork = await this.accessModel.findOne({
+    const existingAccess = await this.accessModel.findOne({
       machineId: data.machineId,
     });
 
-    if (existingWork) {
-      if (existingWork.__v + 1 !== data.version) {
+    if (existingAccess) {
+      if (existingAccess.version + 1 !== data.version) {
         throw new Error('Bad version');
       }
 
-      existingWork.employee = data.employee;
-      existingWork.__v = data.version;
-      await existingWork.save();
+      existingAccess.employee = data.employee;
+      existingAccess.version = data.version;
+      await existingAccess.save();
       return;
     }
 
-    const newWork = new this.accessModel({
+    const newAccess = new this.accessModel({
       machineId: data.machineId,
       employee: data.employee,
-      __v: data.version,
+      version: data.version,
     });
 
-    await newWork.save();
+    this.logger.debug('Added access', newAccess);
+
+    await newAccess.save();
   }
 
   private fillMissingDates(

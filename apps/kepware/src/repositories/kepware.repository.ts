@@ -12,20 +12,6 @@ import { PrismaConnection } from '../database/prisma-connection';
 export class KepwareRepository {
   constructor(private readonly prisma: PrismaConnection) {}
 
-  // async create(data: MachineCreatedMessage['data']): Promise<void> {
-  //   try {
-  //     await this.prisma.machine.create({
-  //       data,
-  //     });
-  //   } catch (err) {
-  //     if (err.constructor.name === 'PrismaClientKnownRequestError') {
-  //       if ((err as Prisma.PrismaClientKnownRequestError).code === 'P2002') {
-  //         throw new BadRequestException('Serial Number must be unique');
-  //       }
-  //     }
-  //   }
-  // }
-
   async update(data: MachineUpdatedMessage['data']) {
     const machine = await this.prisma.machine.findUnique({
       where: { serialNumber: data.serialNumber },
@@ -54,6 +40,13 @@ export class KepwareRepository {
         }
       }
     }
+  }
+
+  async brakeMachine(serialNumber: string): Promise<void> {
+    await this.prisma.machine.update({
+      where: { serialNumber },
+      data: { status: 'BROKEN' },
+    });
   }
 
   async findWorking(): Promise<Machine[]> {
