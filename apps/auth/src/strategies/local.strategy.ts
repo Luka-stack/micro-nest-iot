@@ -15,4 +15,3 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     return this.authService.validateUser(email, password);
   }
 }
-

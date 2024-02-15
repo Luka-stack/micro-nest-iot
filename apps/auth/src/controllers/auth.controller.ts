@@ -34,8 +34,8 @@ export class AuthController {
   @Post('/login')
   @HttpCode(200)
   @UseGuards(LocalGuard)
-  login(@CurrentUser() user: UserDto) {
-    return this.authService.login(user);
+  login(@CurrentUser() user: UserDto, @Body('appKey') appKey: string) {
+    return this.authService.login(user, appKey);
   }
 
   @Post('/login/:provider')
