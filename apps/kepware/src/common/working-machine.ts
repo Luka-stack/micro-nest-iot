@@ -50,21 +50,28 @@ export class WorkingMachine {
     const { productionRate, defaultRate, maxRate, faultRate } =
       this.baseMachine;
 
-    let breakChance = 0;
-
-    if (productionRate < defaultRate) {
+    if (productionRate === maxRate) {
+      return 0.3;
+    } else if (productionRate < defaultRate) {
       const difference = (productionRate - maxRate) / (defaultRate - maxRate);
-      breakChance = faultRate * (1 - difference);
+      return (defaultRate - maxRate) * difference * faultRate;
+    } else {
+      return faultRate;
     }
-
-    return breakChance * 0.01;
   }
 
   maintenanceBreakeChance(): number {
     const now = new Date();
     const timeDiff = this.baseMachine.nextMaintenance.getTime() - now.getTime();
-    const diffInDays = timeDiff / (1000 * 3600 * 24);
 
-    return diffInDays * 0.015;
+    if (timeDiff > 0) {
+      const diffInDays = timeDiff / (1000 * 3600 * 24);
+      return 2.5 / diffInDays;
+    } else if (timeDiff == 0) {
+      return 0.3;
+    } else {
+      const diffInDays = Math.abs(timeDiff) / (1000 * 3600 * 24);
+      return diffInDays / 0.03;
+    }
   }
 }
