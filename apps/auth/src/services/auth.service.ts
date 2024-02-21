@@ -144,7 +144,10 @@ export class AuthService {
   }
 
   private validateAppKey(appKey: string) {
-    if (appKey !== this.configService.get('NEXT_APP_KEY')) {
+    if (
+      appKey !== this.configService.get('NEXT_APP_KEY') &&
+      appKey !== this.configService.get('SVELTE_APP_KEY')
+    ) {
       throw new UnauthorizedException('We cannot authorize your credentials');
     }
   }
