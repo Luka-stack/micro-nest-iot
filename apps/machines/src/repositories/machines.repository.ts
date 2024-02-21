@@ -200,7 +200,6 @@ export class MachinesRepository {
     const offset = Number(queryDto.offset) || 0;
 
     const queryMachines = this.conn.query.PGMachine.findMany({
-      where,
       limit,
       offset: sql.placeholder('offset'),
       with: {
@@ -208,6 +207,7 @@ export class MachinesRepository {
         model: true,
         maintainInfo: true,
       },
+      where,
       orderBy: schema.PGMachine.serialNumber,
     }).prepare('query_machines');
 
@@ -232,6 +232,7 @@ export class MachinesRepository {
 
   queryBuilder(queryDto: QueryMachineDto) {
     const query: SQLWrapper[] = [];
+    const innerQuery: SQLWrapper[] = [];
     let tmp: any;
 
     if (queryDto.employee) {
@@ -287,6 +288,43 @@ export class MachinesRepository {
 
     if (queryDto.models) {
       query.push(inArray(schema.PGMachine.type, queryDto.models.split(',')));
+    }
+
+    if (queryDto.priority) {
+      innerQuery.push(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        eq(schema.PGMachineMaintainInfo.priority, queryDto.priority),
+      );
+    }
+
+    if (queryDto.nextMaintenance) {
+      const from = new Date();
+      const to = new Date();
+
+      from.setDate(from.getDate() + Number(queryDto.nextMaintenance));
+      to.setDate(to.getDate() + Number(queryDto.nextMaintenance) + 1);
+
+      to.setHours(1, 0, 0, 0);
+      from.setHours(1, 0, 0, 0);
+
+      innerQuery.push(
+        gte(schema.PGMachineMaintainInfo.maintenance, from),
+        lt(schema.PGMachineMaintainInfo.maintenance, to),
+      );
+    }
+
+    if (innerQuery.length) {
+      return and(
+        ...query,
+        inArray(
+          schema.PGMachine.id,
+          this.conn
+            .select({ id: schema.PGMachineMaintainInfo.id })
+            .from(schema.PGMachineMaintainInfo)
+            .where(and(...innerQuery)),
+        ),
+      );
     }
 
     return and(...query);

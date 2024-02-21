@@ -1,8 +1,4 @@
-import {
-  registerDecorator,
-  ValidationArguments,
-  ValidationOptions,
-} from 'class-validator';
+import { registerDecorator, ValidationOptions } from 'class-validator';
 
 const filters = ['lt', 'lte', 'gt', 'gte', 'equals'];
 
@@ -12,7 +8,7 @@ export function IsFilter(validationOptions?: ValidationOptions) {
       ', ',
     )}`;
 
-    const validate = function (value: any, _: ValidationArguments) {
+    const validate = function (value: any) {
       if (typeof value !== 'string') {
         return false;
       }
