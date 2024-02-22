@@ -47,12 +47,19 @@ export class MachinesController {
     return this.machinesService.findMany(queryMachineDto, user);
   }
 
-  @Get('/:serialNumber/history')
-  async findMachineHistory(
+  @Get('/:serialNumber/with-history')
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE)
+  async findMachineWithHistory(
     @Param('serialNumber') serialNumber: string,
     @CurrentUser() user: UserPayload,
   ) {
-    return this.machinesService.findMachineHistory(serialNumber, user);
+    return this.machinesService.findMachineWithHistory(serialNumber, user);
+  }
+
+  @Get('/:serialNumber/history')
+  @Roles(USER_ROLES.ADMIN, USER_ROLES.MAINTAINER)
+  async findMachineHistory(@Param('serialNumber') serialNumber: string) {
+    return this.machinesService.findMachineHistory(serialNumber);
   }
 
   @Patch('/:serialNumber')

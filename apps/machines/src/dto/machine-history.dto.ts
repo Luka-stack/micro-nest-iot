@@ -5,7 +5,7 @@ export class MachineHistoryDto {
   id: number;
 
   @Exclude()
-  machineId: number;
+  machineSerialNumber: number;
 
   maintainer: string;
 

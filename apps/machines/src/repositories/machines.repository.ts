@@ -30,12 +30,9 @@ export class MachinesRepository {
     private readonly conn: PostgresJsDatabase<typeof schema>,
   ) {}
 
-  findMachineWithHistory(serialNumber: string) {
-    return this.conn.query.PGMachine.findFirst({
-      where: eq(schema.PGMachine.serialNumber, serialNumber),
-      with: {
-        maintenances: true,
-      },
+  findMachineHistory(serialNumber: string) {
+    return this.conn.query.PGMaintenanceHistory.findMany({
+      where: eq(schema.PGMaintenanceHistory.machineSerialNumber, serialNumber),
     });
   }
 
@@ -162,7 +159,7 @@ export class MachinesRepository {
   ) {
     return await this.conn.transaction(async (trx) => {
       await trx.insert(schema.PGMaintenanceHistory).values({
-        machineId: machine.id,
+        machineSerialNumber: machine.serialNumber,
         description: body.description,
         date: new Date(),
         maintainer: machine.assignedMaintainer,

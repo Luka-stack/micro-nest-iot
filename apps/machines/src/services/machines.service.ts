@@ -22,6 +22,7 @@ import { MachineMaintainInfoDto } from '../dto/machine-maintain-info.dto';
 import { MACHINE_STATUS, NOT_ASSIGNED } from '../app.types';
 import { AnalyserService } from './analyser.service';
 import { MachineBrokeMessage } from '@iot/communication';
+import { MachineHistoryDto } from '../dto/machine-history.dto';
 
 @Injectable()
 export class MachinesService {
@@ -72,7 +73,14 @@ export class MachinesService {
     };
   }
 
-  async findMachineHistory(serialNumber: string, user: UserPayload) {
+  async findMachineHistory(serialNumber: string) {
+    const machineHistory =
+      await this.machinesRepository.findMachineHistory(serialNumber);
+
+    return { data: plainToInstance(MachineHistoryDto, machineHistory) };
+  }
+
+  async findMachineWithHistory(serialNumber: string, user: UserPayload) {
     const machine = await this.machinesRepository.findOne(serialNumber, {
       maintainInfo: true,
       model: true,
