@@ -6,6 +6,7 @@ import {
 } from 'class-validator';
 
 import { IsFilter } from '../../decorators/is-filter';
+import { IsPriority } from '../../decorators/is-priority';
 import { IsMachineStatus } from '../../decorators/is-machine-status';
 import { QueryPaginationDto } from './query-pagination.dto';
 
@@ -45,4 +46,20 @@ export class QueryMachineDto extends QueryPaginationDto {
   @IsOptional()
   @IsFilter()
   startedAtFilter?: string;
+
+  @IsOptional()
+  @IsString()
+  employee?: string;
+
+  @IsOptional()
+  @IsString()
+  maintainer?: string;
+
+  @IsOptional()
+  @IsString()
+  priority?: string;
+
+  @IsOptional()
+  @IsPriority()
+  nextMaintenance?: string;
 }

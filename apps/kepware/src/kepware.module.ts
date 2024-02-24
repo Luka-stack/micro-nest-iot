@@ -1,15 +1,16 @@
-import { CommunicationModule } from '@iot/communication';
+import * as Joi from 'joi';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
-import * as Joi from 'joi';
-import { ANALYSER_QUEUE } from './constants/queues';
+import { CommunicationModule } from '@iot/communication';
 
-import { KepwareController } from './kepware.controller';
 import { KepwareService } from './services/kepware.service';
-import { KepwareRepository } from './repositories/kepware.repository';
-import { PrismaConnection } from './database/prisma-connection';
 import { AnalyserService } from './services/analyser.service';
+import { PrismaConnection } from './database/prisma-connection';
+import { KepwareController } from './kepware.controller';
+import { KepwareRepository } from './repositories/kepware.repository';
+import { WorkingMachineService } from './services/working-machine.service';
+import { ANALYSER_QUEUE, MACHINE_QUEUE } from './constants/queues';
 
 @Module({
   imports: [
@@ -22,7 +23,10 @@ import { AnalyserService } from './services/analyser.service';
       envFilePath: './apps/kepware/.env',
     }),
     CommunicationModule,
-    CommunicationModule.register({ name: ANALYSER_QUEUE }),
+    CommunicationModule.register([
+      { name: ANALYSER_QUEUE },
+      { name: MACHINE_QUEUE },
+    ]),
     ScheduleModule.forRoot(),
   ],
   controllers: [KepwareController],
@@ -31,6 +35,7 @@ import { AnalyserService } from './services/analyser.service';
     PrismaConnection,
     AnalyserService,
     KepwareRepository,
+    WorkingMachineService,
   ],
 })
 export class KepwareModule {}

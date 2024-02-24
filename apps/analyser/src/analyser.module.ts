@@ -1,14 +1,16 @@
-import { CommunicationModule } from '@iot/communication';
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose/dist';
 import * as Joi from 'joi';
+import { Module } from '@nestjs/common';
+import { SecurityModule } from '@iot/security';
+import { MongooseModule } from '@nestjs/mongoose/dist';
+import { CommunicationModule } from '@iot/communication';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AnalyserController } from './analyser.controller';
 import { AnalyserService } from './analyser.service';
-import { MONGODB_URI } from './constants/database';
 import { Work, WorkSchema } from './schema/work.schema';
+import { AnalyserController } from './analyser.controller';
+import { Access, AccessSchema } from './schema/access.schema';
 import { Utilization, UtilizationSchema } from './schema/utilization.schema';
+import { JWT_EXPIRATION, JWT_SECRET, MONGODB_URI } from './constants';
 
 @Module({
   imports: [
@@ -21,6 +23,10 @@ import { Utilization, UtilizationSchema } from './schema/utilization.schema';
       }),
       envFilePath: './apps/analyser/.env',
     }),
+    SecurityModule.register({
+      secret: JWT_SECRET,
+      expiresInSeconds: JWT_EXPIRATION,
+    }),
     CommunicationModule,
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
@@ -31,6 +37,7 @@ import { Utilization, UtilizationSchema } from './schema/utilization.schema';
     MongooseModule.forFeature([
       { name: Work.name, schema: WorkSchema },
       { name: Utilization.name, schema: UtilizationSchema },
+      { name: Access.name, schema: AccessSchema },
     ]),
   ],
   controllers: [AnalyserController],

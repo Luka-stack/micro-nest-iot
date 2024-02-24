@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { SecurityModule } from '@iot/security';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AuthService } from './auth.service';
-import { MONGODB_URI } from './constants/database';
+import { AuthService } from './services/auth.service';
+import { UsersService } from './services/users.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AuthController } from './controllers/auth.controller';
+import { UsersController } from './controllers/users.controller';
 import { User, UserSchema } from './schema/user.schema';
+import { JWT_EXPIRATION, JWT_SECRET, MONGODB_URI } from './constants';
 
 @Module({
   imports: [
@@ -17,17 +18,11 @@ import { User, UserSchema } from './schema/user.schema';
       isGlobal: true,
       envFilePath: './apps/auth/.env',
     }),
-    SecurityModule,
-    PassportModule,
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: {
-          expiresIn: `${configService.get('JWT_EXPIRATION_SECONDS')}s`,
-        },
-      }),
+    SecurityModule.register({
+      secret: JWT_SECRET,
+      expiresInSeconds: JWT_EXPIRATION,
     }),
+    PassportModule,
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>(MONGODB_URI),
@@ -36,7 +31,7 @@ import { User, UserSchema } from './schema/user.schema';
     }),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LocalStrategy],
+  controllers: [AuthController, UsersController],
+  providers: [AuthService, UsersService, LocalStrategy],
 })
 export class AuthModule {}

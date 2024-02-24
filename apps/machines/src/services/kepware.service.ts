@@ -1,11 +1,7 @@
 import { ClientProxy } from '@nestjs/microservices';
 import { MachineSubjects } from '@iot/communication';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import {
-  MachineCreatedMessage,
-  MachineDeletedMessage,
-  MachineUpdatedMessage,
-} from '@iot/communication';
+import { MachineUpdatedMessage } from '@iot/communication';
 
 import { KEPWARE_QUEUE } from '../constants';
 
@@ -17,27 +13,11 @@ export class KepwareService {
     @Inject(KEPWARE_QUEUE) private readonly clientProxy: ClientProxy,
   ) {}
 
-  emitMachineCreated(data: MachineCreatedMessage['data']): void {
-    this.clientProxy.emit(MachineSubjects.MachineCreated, data);
-
-    this.logger.debug(
-      `New Machine ${data.serialNumber} was sent to kepware server`,
-    );
-  }
-
   emitMachineUpdated(data: MachineUpdatedMessage['data']): void {
     this.clientProxy.emit(MachineSubjects.MachineUpdated, data);
 
     this.logger.debug(
       `Updated Machine ${data.serialNumber} was sent to kepware server`,
-    );
-  }
-
-  emitMachineDeleted(data: MachineDeletedMessage['data']): void {
-    this.clientProxy.emit(MachineSubjects.MachineDeleted, data);
-
-    this.logger.debug(
-      `Destroyed Machine serial number ${data.serialNumber} was sent to kepware server`,
     );
   }
 }

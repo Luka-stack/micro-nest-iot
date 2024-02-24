@@ -1,8 +1,4 @@
-import {
-  registerDecorator,
-  ValidationArguments,
-  ValidationOptions,
-} from 'class-validator';
+import { registerDecorator, ValidationOptions } from 'class-validator';
 import { MACHINE_STATUS } from '../app.types';
 
 export function IsMachineStatus(validationOptions?: ValidationOptions) {
@@ -11,7 +7,7 @@ export function IsMachineStatus(validationOptions?: ValidationOptions) {
       MACHINE_STATUS,
     ).join(', ')}`;
 
-    const validate = function (value: any, _: ValidationArguments) {
+    const validate = function (value: any) {
       if (typeof value !== 'string') {
         return false;
       }

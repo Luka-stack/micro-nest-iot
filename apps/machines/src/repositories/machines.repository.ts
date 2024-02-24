@@ -7,6 +7,7 @@ import {
   gt,
   gte,
   inArray,
+  isNull,
   like,
   lt,
   lte,
@@ -14,9 +15,11 @@ import {
 } from 'drizzle-orm';
 
 import * as schema from '../database/schema';
+import { NOT_ASSIGNED } from '../app.types';
 import { PG_CONNECTION } from '../constants';
 import { QueryMachineDto } from '../dto/incoming/query-machine.dto';
-import { UpdateMachineDto } from '../dto/incoming/update-machine.dto';
+import { ReportMaintenanceDto } from '../dto/incoming/report-maintenance.dto';
+import { Machine, MachineColumns, MaintainInfo } from '../bos/machine';
 
 @Injectable()
 export class MachinesRepository {
@@ -27,11 +30,35 @@ export class MachinesRepository {
     private readonly conn: PostgresJsDatabase<typeof schema>,
   ) {}
 
-  findOne(serialNumber: string) {
-    return this.conn.query.PGMachine.findFirst({
-      where: eq(schema.PGMachine.serialNumber, serialNumber),
-      with: { model: true, type: true },
+  findMachineHistory(serialNumber: string) {
+    return this.conn.query.PGMaintenanceHistory.findMany({
+      where: eq(schema.PGMaintenanceHistory.machineSerialNumber, serialNumber),
     });
+  }
+
+  async findOne(serialNumber: string, columns?: MachineColumns) {
+    if (!columns) {
+      const machine = await this.conn.query.PGMachine.findFirst({
+        where: eq(schema.PGMachine.serialNumber, serialNumber),
+      });
+
+      if (!machine) {
+        throw new NotFoundException('Machine not found');
+      }
+
+      return machine;
+    }
+
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+      with: columns,
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    return machine;
   }
 
   findStatus(serialNumber: string) {
@@ -41,23 +68,15 @@ export class MachinesRepository {
     });
   }
 
-  async update(serialNumber: string, machineDto: UpdateMachineDto) {
-    const machine = await this.conn.query.PGMachine.findFirst({
-      where: eq(schema.PGMachine.serialNumber, serialNumber),
-    });
-
-    if (!machine) {
-      throw new NotFoundException('Machine not found');
-    }
-
-    const data: Partial<typeof machine> = {
-      ...machineDto,
-      version: machine.version + 1,
+  async update(
+    serialNumber: string,
+    machineData: Partial<Machine>,
+    newVersion: number,
+  ) {
+    const data: Partial<Machine> = {
+      ...machineData,
+      statusVersion: newVersion,
     };
-
-    if (machineDto.status) {
-      data.lastStatusUpdate = new Date();
-    }
 
     const updated = await this.conn
       .update(schema.PGMachine)
@@ -68,6 +87,109 @@ export class MachinesRepository {
     return updated[0];
   }
 
+  async updateMaintainInfo(id: number, maintainInfo: Partial<MaintainInfo>) {
+    const updated = await this.conn
+      .update(schema.PGMachineMaintainInfo)
+      .set(maintainInfo)
+      .where(eq(schema.PGMachineMaintainInfo.id, id))
+      .returning();
+
+    return updated[0];
+  }
+
+  async assignEmployee(serialNumber: string, employee: string | null) {
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    const updated = await this.conn
+      .update(schema.PGMachine)
+      .set({
+        assignedEmployee: employee,
+        accessVersion: machine.accessVersion + 1,
+      })
+      .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning();
+
+    return updated[0];
+  }
+
+  async assignMaintainer(serialNumber: string, maintainer: string) {
+    const machine = await this.conn.query.PGMachine.findFirst({
+      where: eq(schema.PGMachine.serialNumber, serialNumber),
+    });
+
+    if (!machine) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    if (machine.assignedMaintainer !== null) {
+      throw new Error('Machine already has maintainer');
+    }
+
+    const updated = await this.conn
+      .update(schema.PGMachine)
+      .set({ assignedMaintainer: maintainer })
+      .where(eq(schema.PGMachine.serialNumber, serialNumber))
+      .returning();
+
+    return updated[0];
+  }
+
+  async unassignMaintainer(serialNumber: string, maintainer: string) {
+    await this.conn
+      .update(schema.PGMachine)
+      .set({ assignedMaintainer: null })
+      .where(
+        and(
+          eq(schema.PGMachine.serialNumber, serialNumber),
+          eq(schema.PGMachine.assignedMaintainer, maintainer),
+        ),
+      );
+  }
+
+  async reportMaintenance(
+    machine: Machine & { maintainInfo: MaintainInfo },
+    defects: string[],
+    body: ReportMaintenanceDto,
+  ) {
+    return await this.conn.transaction(async (trx) => {
+      await trx.insert(schema.PGMaintenanceHistory).values({
+        machineSerialNumber: machine.serialNumber,
+        description: body.description,
+        date: new Date(),
+        maintainer: machine.assignedMaintainer,
+        nextMaintenance: new Date(body.nextMaintenance),
+        scheduled: machine.maintainInfo.maintenance,
+        type: machine.status === 'BROKEN' ? 'REPAIR' : 'MAINTENANCE',
+      });
+
+      const updated = await trx
+        .update(schema.PGMachine)
+        .set({
+          status: 'IDLE',
+          assignedMaintainer: null,
+          statusVersion: machine.statusVersion + 1,
+        })
+        .where(eq(schema.PGMachine.id, machine.id))
+        .returning();
+
+      await trx
+        .update(schema.PGMachineMaintainInfo)
+        .set({
+          maintenance: new Date(body.nextMaintenance),
+          defects,
+        })
+        .where(eq(schema.PGMachineMaintainInfo.id, machine.maintainInfo.id));
+
+      return updated[0];
+    });
+  }
+
   async query(queryDto: QueryMachineDto) {
     const where = this.queryBuilder(queryDto);
 
@@ -75,13 +197,14 @@ export class MachinesRepository {
     const offset = Number(queryDto.offset) || 0;
 
     const queryMachines = this.conn.query.PGMachine.findMany({
-      where,
       limit,
       offset: sql.placeholder('offset'),
       with: {
         type: true,
         model: true,
+        maintainInfo: true,
       },
+      where,
       orderBy: schema.PGMachine.serialNumber,
     }).prepare('query_machines');
 
@@ -106,7 +229,26 @@ export class MachinesRepository {
 
   queryBuilder(queryDto: QueryMachineDto) {
     const query: SQLWrapper[] = [];
+    const innerQuery: SQLWrapper[] = [];
     let tmp: any;
+
+    if (queryDto.employee) {
+      if (queryDto.employee === NOT_ASSIGNED) {
+        query.push(isNull(schema.PGMachine.assignedEmployee));
+      } else {
+        query.push(eq(schema.PGMachine.assignedEmployee, queryDto.employee));
+      }
+    }
+
+    if (queryDto.maintainer) {
+      if (queryDto.maintainer === NOT_ASSIGNED) {
+        query.push(isNull(schema.PGMachine.assignedMaintainer));
+      } else {
+        query.push(
+          eq(schema.PGMachine.assignedMaintainer, queryDto.maintainer),
+        );
+      }
+    }
 
     if (queryDto.serialNumber) {
       query.push(
@@ -143,6 +285,43 @@ export class MachinesRepository {
 
     if (queryDto.models) {
       query.push(inArray(schema.PGMachine.type, queryDto.models.split(',')));
+    }
+
+    if (queryDto.priority) {
+      innerQuery.push(
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        eq(schema.PGMachineMaintainInfo.priority, queryDto.priority),
+      );
+    }
+
+    if (queryDto.nextMaintenance) {
+      const from = new Date();
+      const to = new Date();
+
+      from.setDate(from.getDate() + Number(queryDto.nextMaintenance));
+      to.setDate(to.getDate() + Number(queryDto.nextMaintenance) + 1);
+
+      to.setHours(1, 0, 0, 0);
+      from.setHours(1, 0, 0, 0);
+
+      innerQuery.push(
+        gte(schema.PGMachineMaintainInfo.maintenance, from),
+        lt(schema.PGMachineMaintainInfo.maintenance, to),
+      );
+    }
+
+    if (innerQuery.length) {
+      return and(
+        ...query,
+        inArray(
+          schema.PGMachine.id,
+          this.conn
+            .select({ id: schema.PGMachineMaintainInfo.id })
+            .from(schema.PGMachineMaintainInfo)
+            .where(and(...innerQuery)),
+        ),
+      );
     }
 
     return and(...query);

@@ -1,5 +1,6 @@
 import { RmqService } from '@iot/communication';
 import { NestFactory } from '@nestjs/core';
+
 import { KEPWARE_QUEUE } from './constants/queues';
 import { KepwareModule } from './kepware.module';
 

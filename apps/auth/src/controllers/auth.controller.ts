@@ -7,20 +7,13 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import {
-  CurrentUser,
-  JwtAuthGuard,
-  Roles,
-  USER_ROLES,
-  UserPayload,
-} from '@iot/security';
+import { CurrentUser, JwtAuthGuard, UserPayload } from '@iot/security';
 
 import { UserDto } from '../dto/user.dto';
 import { LocalGuard } from '../guards/local.guard';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { LocalSignupPayload } from '../payload/local-signup.payload';
 import { ProviderLoginPayload } from '../payload/provider-login.payload';
-import { RolesGuard } from '@iot/security/guards/roles.guard';
 
 @Controller('')
 export class AuthController {
@@ -41,8 +34,8 @@ export class AuthController {
   @Post('/login')
   @HttpCode(200)
   @UseGuards(LocalGuard)
-  login(@CurrentUser() user: UserDto) {
-    return this.authService.login(user);
+  login(@CurrentUser() user: UserDto, @Body('appKey') appKey: string) {
+    return this.authService.login(user, appKey);
   }
 
   @Post('/login/:provider')
@@ -52,12 +45,5 @@ export class AuthController {
     @Body() login: ProviderLoginPayload,
   ) {
     return this.authService.loginProvider(provider, login);
-  }
-
-  @Get('/admin')
-  @Roles(USER_ROLES.MAINTAINER)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  admin(@CurrentUser() user: UserDto) {
-    return { admin: user };
   }
 }

@@ -9,4 +9,7 @@ export class ProviderLoginPayload {
 
   @IsString()
   idToken: string;
+
+  @IsString()
+  appKey: string;
 }

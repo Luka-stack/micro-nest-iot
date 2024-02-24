@@ -14,6 +14,5 @@ export class LocalSignupPayload {
   password: string;
 
   @IsString()
-  @IsNotEmpty()
-  role: string;
+  appKey: string;
 }

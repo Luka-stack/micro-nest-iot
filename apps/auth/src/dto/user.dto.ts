@@ -1,10 +1,11 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 
 export class UserDto {
   email: string;
 
   displayName: string;
 
+  @Expose({ groups: ['auth'] })
   role: string;
 
   @Exclude()

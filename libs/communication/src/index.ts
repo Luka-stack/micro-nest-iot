@@ -7,3 +7,6 @@ export * from './messages/machine-updated.message';
 export * from './messages/machine-deleted.message';
 export * from './messages/register-utilization.message';
 export * from './messages/register-work.message';
+export * from './messages/machine-broke.message';
+export * from './messages/employee-assigned.message';
+export * from './messages/employee-unassigned.message';

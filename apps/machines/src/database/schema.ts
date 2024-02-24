@@ -9,6 +9,9 @@ import {
   timestamp,
   uniqueIndex,
   varchar,
+  text,
+  index,
+  json,
 } from 'drizzle-orm/pg-core';
 
 export const PGMachineStatus = pgEnum('status', [
@@ -16,7 +19,10 @@ export const PGMachineStatus = pgEnum('status', [
   'WORKING',
   'MAINTENANCE',
   'BROKEN',
+  'UNDER_MAINTENANCE',
 ]);
+
+export const PGSchedulePiority = pgEnum('priority', ['HIGH', 'NORMAL', 'LOW']);
 
 export const PGMachine = pgTable(
   'machines',
@@ -31,14 +37,29 @@ export const PGMachine = pgTable(
     producent: varchar('producent', { length: 50 }),
     type: varchar('type', { length: 50 }),
     model: varchar('model', { length: 50 }),
-    version: integer('version'),
+    assignedEmployee: varchar('assigned_employee').default(null),
+    assignedMaintainer: varchar('assigned_maintainer').default(null),
+    accessVersion: integer('access_version'),
+    statusVersion: integer('status_version'),
   },
   (machines) => ({
     serialNumberIndex: uniqueIndex('serial_number_idx').on(
       machines.serialNumber,
     ),
+    employeeIndex: index('employee_idx').on(machines.assignedEmployee),
+    maintainerIndex: index('maintainer_idx').on(machines.assignedMaintainer),
   }),
 );
+
+export const PGMachineMaintainInfo = pgTable('machine_maintain_info', {
+  id: serial('id').primaryKey(),
+  defects: json('defects').$type<string[]>(),
+  machineId: integer('machine_id')
+    .notNull()
+    .references(() => PGMachine.id),
+  maintenance: timestamp('next_maintenance', { withTimezone: true }),
+  priority: PGSchedulePiority('priority').default('NORMAL'),
+});
 
 export const PGProducent = pgTable(
   'producents',
@@ -82,6 +103,19 @@ export const PGModel = pgTable(
   }),
 );
 
+export const PGMaintenanceHistory = pgTable('maintenance_history', {
+  id: serial('id').primaryKey(),
+  machineSerialNumber: varchar('machine_serial_number').notNull(),
+  maintainer: varchar('maintainer'),
+  description: text('description'),
+  date: timestamp('date', { withTimezone: true }).defaultNow(),
+  type: varchar('type'),
+  scheduled: timestamp('scheduled', {
+    withTimezone: true,
+  }),
+  nextMaintenance: timestamp('next_maintenance', { withTimezone: true }),
+});
+
 export const PGProducentsToTypes = pgTable(
   'producents_to_types',
   {
@@ -120,7 +154,7 @@ export const PGModelsRelations = relations(PGModel, ({ one }) => ({
   }),
 }));
 
-export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
+export const PGMachineRelations = relations(PGMachine, ({ one, many }) => ({
   type: one(PGType, {
     fields: [PGMachine.type],
     references: [PGType.name],
@@ -129,4 +163,19 @@ export const PGMachineRelations = relations(PGMachine, ({ one }) => ({
     fields: [PGMachine.model],
     references: [PGModel.name],
   }),
+  maintainInfo: one(PGMachineMaintainInfo, {
+    references: [PGMachineMaintainInfo.machineId],
+    fields: [PGMachine.id],
+  }),
+  maintenances: many(PGMaintenanceHistory),
 }));
+
+export const PGMaintenanceHistoryRelations = relations(
+  PGMaintenanceHistory,
+  ({ one }) => ({
+    machine: one(PGMachine, {
+      fields: [PGMaintenanceHistory.machineSerialNumber],
+      references: [PGMachine.serialNumber],
+    }),
+  }),
+);

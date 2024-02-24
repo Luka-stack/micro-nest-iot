@@ -1,15 +1,19 @@
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Injectable, Logger } from '@nestjs/common';
-
-import { Work, WorkDocument } from './schema/work.schema';
+import { USER_ROLES, UserPayload } from '@iot/security';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import {
   RegisterUtilizationMessage,
   RegisterWorkMessage,
+  EmployeeAssignedMessage,
+  EmployeeUnassignedMessage,
 } from '@iot/communication';
-import { Utilization, UtilizationDocument } from './schema/utilization.schema';
-import { QueryUtilizationDto } from './dto/query-utilization.dto';
+
 import { StatisticsDto } from './dto/statistics-dto';
+import { Work, WorkDocument } from './schema/work.schema';
+import { QueryUtilizationDto } from './dto/query-utilization.dto';
+import { Access, AccessDocument } from './schema/access.schema';
+import { Utilization, UtilizationDocument } from './schema/utilization.schema';
 
 @Injectable()
 export class AnalyserService {
@@ -17,6 +21,8 @@ export class AnalyserService {
 
   constructor(
     @InjectModel(Work.name) private readonly workModel: Model<WorkDocument>,
+    @InjectModel(Access.name)
+    private readonly accessModel: Model<AccessDocument>,
     @InjectModel(Utilization.name)
     private readonly utilizationModel: Model<UtilizationDocument>,
   ) {}
@@ -55,7 +61,13 @@ export class AnalyserService {
     }
   }
 
-  async getUtilization(serialNumber: string, query: QueryUtilizationDto) {
+  async getUtilization(
+    serialNumber: string,
+    query: QueryUtilizationDto,
+    user: UserPayload,
+  ) {
+    await this.checkAccess(serialNumber, user);
+
     const tillThatDay = new Date(query.toDate);
     tillThatDay.setDate(tillThatDay.getDate() + 1);
 
@@ -103,14 +115,21 @@ export class AnalyserService {
     };
   }
 
-  async getWork(serialNumber: string) {
+  async getWork(serialNumber: string, user: UserPayload) {
+    await this.checkAccess(serialNumber, user);
+
     const data = await this.workModel.find({ serialNumber });
     const machinesDTO = data.map((machine) => machine.toObject());
 
     return machinesDTO;
   }
 
-  async getStatistics(serialNumber: string): Promise<StatisticsDto> {
+  async getStatistics(
+    serialNumber: string,
+    user: UserPayload,
+  ): Promise<StatisticsDto> {
+    await this.checkAccess(serialNumber, user);
+
     const todayDate = new Date();
     todayDate.setUTCHours(0, 0, 0, 0);
 
@@ -247,6 +266,58 @@ export class AnalyserService {
     };
   }
 
+  async removeAccess(data: EmployeeUnassignedMessage['data']) {
+    const existingAccess = await this.accessModel.findOne({
+      machineId: data.machineId,
+    });
+
+    if (!existingAccess) {
+      this.logger.error('Machine not found');
+      throw new Error('Machine not found');
+    }
+
+    if (existingAccess.version + 1 !== data.version) {
+      this.logger.error('Bad version', existingAccess.version, data.version);
+      throw new Error('Bad version');
+    }
+
+    const response = await this.accessModel.deleteOne({
+      machineId: data.machineId,
+    });
+
+    if (response.deletedCount === 0) {
+      this.logger.error('Machine was not deleted');
+      throw new Error('Machine was not deleted');
+    }
+  }
+
+  async addAccess(data: EmployeeAssignedMessage['data']) {
+    const existingAccess = await this.accessModel.findOne({
+      machineId: data.machineId,
+    });
+
+    if (existingAccess) {
+      if (existingAccess.version + 1 !== data.version) {
+        throw new Error('Bad version');
+      }
+
+      existingAccess.employee = data.employee;
+      existingAccess.version = data.version;
+      await existingAccess.save();
+      return;
+    }
+
+    const newAccess = new this.accessModel({
+      machineId: data.machineId,
+      employee: data.employee,
+      version: data.version,
+    });
+
+    this.logger.debug('Added access', newAccess);
+
+    await newAccess.save();
+  }
+
   private fillMissingDates(
     data: { date: string }[],
     startDateString: string,
@@ -280,5 +351,20 @@ export class AnalyserService {
     }
 
     return filledData;
+  }
+
+  private async checkAccess(machineId: string, user: UserPayload) {
+    if (user.role === USER_ROLES.ADMIN) {
+      return;
+    }
+
+    const access = await this.accessModel.findOne({
+      machineId: machineId,
+      employee: user.email,
+    });
+
+    if (!access) {
+      throw new UnauthorizedException('You do not have access to this machine');
+    }
   }
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "maintenance_history" RENAME COLUMN "machine_id" TO "machine_serial_number";--> statement-breakpoint
+ALTER TABLE "maintenance_history" ALTER COLUMN "machine_serial_number" SET DATA TYPE varchar;
